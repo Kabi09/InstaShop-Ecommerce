@@ -50,8 +50,8 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     const existing = await Review.findOne({ user: req.user._id, product: productId });
     if (existing) return res.status(400).json({ message: 'You have already reviewed this product.' });
 
-    const imageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
-
+    // Change this line:
+const imageUrls = (req.files || []).map(f => f.path);
     const review = new Review({
       user: req.user._id,
       product: productId,
@@ -96,7 +96,8 @@ router.put('/:reviewId', auth, upload.array('images', 5), async (req, res) => {
       }
     }
 
-    const newImageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
+    // Change this line:
+const newImageUrls = (req.files || []).map(f => f.path);
     
     review.images = [...finalImages, ...newImageUrls].slice(0, 5); // Limit max 5
     review.rating = Number(rating);

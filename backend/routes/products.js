@@ -78,7 +78,7 @@ router.post('/', adminAuth, upload.array('images', 10), async (req, res) => {
       return res.status(400).json({ message: 'Name, description, price, and category are required' });
     }
 
-    const imageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
+    const imageUrls = (req.files || []).map(f => f.path);
 
     const product = new Product({
       name, description,
@@ -106,7 +106,7 @@ router.put('/:id', adminAuth, upload.array('images', 10), async (req, res) => {
 
     // Handle new uploaded images
     if (req.files && req.files.length > 0) {
-      const newImageUrls = req.files.map(f => `/uploads/${f.filename}`);
+      const newImageUrls = req.files.map(f => f.path);
       // Merge with existing if keepExisting flag sent
       if (updateData.keepExistingImages === 'true') {
         const existing = await Product.findById(req.params.id);

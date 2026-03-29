@@ -1,60 +1,55 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const path = require('path');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const path = require("path");
 
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const cartRoutes = require('./routes/cart');
-const orderRoutes = require('./routes/orders');
-const paymentRoutes = require('./routes/payment');
-const adminRoutes = require('./routes/admin');
-const reviewRoutes = require('./routes/reviews');
-const contactRoutes = require('./routes/contact');
-const categoryRoutes = require('./routes/categories');
+// Load env
+dotenv.config({ path: "./.env" });
 
 const app = express();
 
 // Middleware
-app.use(helmet());
-const corsOptions = { origin: process.env.FRONTEND_URL || true, credentials: true };
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.json());
+app.use(cors());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/notifications', require('./routes/notifications'));
+const authRoutes = require("./routes/auth");
+const productRoutes = require("./routes/products");
+const cartRoutes = require("./routes/cart");
+const orderRoutes = require("./routes/orders");
+const paymentRoutes = require("./routes/payment");
+const adminRoutes = require("./routes/admin");
+const reviewRoutes = require("./routes/reviews");
+const contactRoutes = require("./routes/contact");
+const categoryRoutes = require("./routes/categories");
+const notificationRoutes = require("./routes/notifications");
+
+// Route usage
+app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => res.json({ status: 'OK', timestamp: new Date() }));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
+app.get("/", (req, res) => {
+  res.send("API is running...");
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+// DB connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ DB connected successfully"))
+  .catch(() => console.log("❌ DB not connected"));
 
-// Start server only locally
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-}
-
-module.exports = app;
+// Start server
+app.listen(process.env.PORT || 5000, () => {
+  console.log("🚀 Server running on port:", process.env.PORT || 5000);
+});
