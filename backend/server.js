@@ -44,14 +44,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
 
-// Connect to MongoDB and start server
-const PORT = process.env.PORT || 5000;
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+
+// Start server only locally
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;
