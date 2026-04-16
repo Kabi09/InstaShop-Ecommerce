@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { HiClipboardList, HiRefresh, HiDownload, HiX, HiEye, HiArrowLeft, HiExclamation, HiCurrencyRupee, HiPhone, HiCreditCard, HiBadgeCheck } from 'react-icons/hi';
+import { HiClipboardList, HiRefresh, HiDownload, HiX, HiEye, HiArrowLeft, HiExclamation, HiCurrencyRupee, HiPhone, HiCreditCard, HiBadgeCheck, HiTruck } from 'react-icons/hi';
 import API from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -144,7 +144,7 @@ export default function Orders() {
 
   const handleReturn = async (id) => {
     if (!returnReason.trim()) { toast.error('Please provide a reason'); return; }
-    
+
     const selectedItems = returnItemsForm.filter(i => i.selected);
     if (selectedItems.length === 0) { toast.error('Please select at least one item to return'); return; }
 
@@ -382,12 +382,11 @@ export default function Orders() {
               <div className="border-t border-white/10 pt-2 flex justify-between text-white font-bold text-lg"><span>Total</span><span>₹{o.totalAmount?.toLocaleString()}</span></div>
               <div className="flex justify-between text-gray-400 text-xs">
                 <span>Payment Status</span>
-                <span className={`font-semibold flex items-center gap-1 ${
-                  o.paymentStatus === 'paid' ? 'text-green-400' :
-                  o.paymentStatus === 'failed' ? 'text-red-400' :
-                  o.paymentStatus === 'refunded' ? 'text-purple-400' :
-                  'text-yellow-400'
-                }`}>
+                <span className={`font-semibold flex items-center gap-1 ${o.paymentStatus === 'paid' ? 'text-green-400' :
+                    o.paymentStatus === 'failed' ? 'text-red-400' :
+                      o.paymentStatus === 'refunded' ? 'text-purple-400' :
+                        'text-yellow-400'
+                  }`}>
                   {paymentStatusIcons[o.paymentStatus] || '💳'}
                   {o.paymentMethod?.toUpperCase()} — {o.paymentStatus === 'paid' ? 'Paid' : o.paymentStatus === 'failed' ? 'Payment Failed' : o.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending'}
                 </span>
@@ -405,11 +404,39 @@ export default function Orders() {
           )}
         </div>
 
+        {/* Delivery & Tracking Box — shown once AWB is assigned by admin */}
+        {o.awbCode && (
+          <div className="glass rounded-xl p-5 mb-6 animate-fadeIn" style={{ borderLeft: '4px solid #3B82F6', borderColor: 'rgba(59,130,246,0.35)' }}>
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><HiTruck className="text-blue-400" /> Delivery & Tracking</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Courier Partner</p>
+                <p className="text-white font-semibold">{o.courierName}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Tracking ID (AWB)</p>
+                <p className="text-accent font-bold text-lg tracking-widest">{o.awbCode}</p>
+              </div>
+              <div className="sm:text-right">
+                <a
+                  href={`https://shiprocket.co/tracking/${o.awbCode}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary inline-flex items-center gap-2 text-sm py-2.5 px-6"
+                  style={{ background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)' }}
+                >
+                  <HiTruck /> Track Live Status
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Refund details */}
         {orderHasRefunds(o) && (
           <div className="glass rounded-xl p-5 mb-6" style={{ borderColor: 'rgba(245,158,11,0.3)' }}>
             <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><HiCurrencyRupee className="text-warning" /> Refund Details</h3>
-            
+
             {/* List returned items */}
             {o.items.some(it => it.returnedQuantity > 0) && (
               <div className="mb-4 bg-white/5 rounded-lg p-3">
@@ -464,7 +491,7 @@ export default function Orders() {
                             newArr[idx].quantity = Number(e.target.value);
                             setReturnItemsForm(newArr);
                           }} className="input-field py-1 px-2 text-xs w-16">
-                            {[...Array(item.max)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
+                            {[...Array(item.max)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
                           </select>
                         </div>
                       )}

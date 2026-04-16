@@ -44,6 +44,13 @@ const orderSchema = new mongoose.Schema({
     refundedAt: Date,
     status: { type: String, enum: ['none', 'pending', 'completed'], default: 'none' }
   },
+  shiprocketOrderId: { type: String },
+  shiprocketShipmentId: { type: String },
+  awbCode: { type: String },
+  courierName: { type: String },
+  manifestUrl: { type: String },
+  labelUrl: { type: String },
+  invoiceUrl: { type: String },
   statusHistory: [{
     status: String,
     timestamp: { type: Date, default: Date.now },

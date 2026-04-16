@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const { adminAuth } = require('../middleware/auth');
 const { sendOrderEmail } = require('../services/emailService');
+const shiprocketService = require('../services/shiprocketService');
 
 const router = express.Router();
 
@@ -81,11 +82,11 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
 
     if (orderStatus) {
       order.orderStatus = orderStatus;
-      
+
       // Handle cancellation and refund
       if (orderStatus === 'cancelled' && oldStatus !== 'cancelled') {
         order.statusHistory.push({ status: 'cancelled', note: 'Order cancelled by admin' });
-        
+
         // Initiate refund if the order was paid
         if (order.paymentStatus === 'paid') {
           order.paymentStatus = 'refunded';
@@ -109,7 +110,7 @@ router.put('/orders/:id', adminAuth, async (req, res) => {
 
     if (orderStatus === 'delivered' && order.paymentMethod === 'cod') {
       order.paymentStatus = 'paid';
-    } else if (paymentStatus && !order.refund?.amount) { 
+    } else if (paymentStatus && !order.refund?.amount) {
       // Only update paymentStatus from body if a refund hasn't just been initiated
       order.paymentStatus = paymentStatus;
     }
@@ -149,7 +150,7 @@ router.put('/orders/:id/return', adminAuth, async (req, res) => {
       if (order.returnRequest.items && order.returnRequest.items.length > 0) {
         refundAmount = order.returnRequest.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         itemsToRestock = order.returnRequest.items;
-        
+
         if (order.returnRequest.items.length < order.items.length) {
           isPartial = true;
         } else {
@@ -166,7 +167,7 @@ router.put('/orders/:id/return', adminAuth, async (req, res) => {
       order.returnRequest.resolvedAt = new Date();
       order.orderStatus = isPartial ? 'delivered' : 'returned'; // Keep delivered if partial
       if (!isPartial) order.paymentStatus = 'refunded';
-      
+
       const previousRefundAmount = order.refund?.amount || 0;
       order.refund = {
         amount: previousRefundAmount + refundAmount, // Accumulate!
@@ -174,7 +175,7 @@ router.put('/orders/:id/return', adminAuth, async (req, res) => {
         refundedAt: new Date(),
         status: 'pending' // Usually 'pending' means admin needs to initiate via payment gateway
       };
-      
+
       order.statusHistory.push({ status: isPartial ? 'partial_return' : 'returned', note: `${isPartial ? 'Partial' : 'Full'} return approved by admin - refund of ₹${refundAmount} initiated` });
 
       // Restock returned items & update returnedQuantity inside order
@@ -182,7 +183,7 @@ router.put('/orders/:id/return', adminAuth, async (req, res) => {
         // Find the item in order.items and increment returnedQuantity
         const oItem = order.items.find(i => i.product.toString() === item.product.toString());
         if (oItem) oItem.returnedQuantity = (oItem.returnedQuantity || 0) + item.quantity;
-        
+
         await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity, totalSold: -item.quantity } });
       }
     } else if (action === 'reject') {
@@ -214,6 +215,116 @@ router.put('/orders/:id/refund-complete', adminAuth, async (req, res) => {
     res.json({ message: 'Refund marked as completed', order });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ─── Shiprocket Admin Endpoints ─────────────────────────────────────────────
+
+// 1. Assign AWB (auto-selects courier)
+router.post('/orders/:id/shiprocket/awb', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (!order.shiprocketShipmentId) return res.status(400).json({ message: 'Order not yet pushed to Shiprocket. Shipment ID missing.' });
+    if (order.awbCode) return res.json({ message: 'AWB already assigned', order });
+
+    const result = await shiprocketService.assignAWB(order.shiprocketShipmentId);
+    const data = result.response?.data || {};
+
+    if (!data.awb_code) return res.status(400).json({ message: 'AWB assignment failed', detail: result });
+
+    order.awbCode = data.awb_code;
+    order.courierName = data.courier_name || 'Unknown';
+    order.orderStatus = 'shipped';
+    order.statusHistory.push({ status: 'shipped', note: `AWB: ${data.awb_code} via ${data.courier_name}` });
+    await order.save();
+
+    // notify user via email
+    try {
+      await order.populate('user', 'email name');
+      if (order.user?.email) sendOrderEmail(order.user.email, `Order Shipped — #${order._id.toString().slice(-8).toUpperCase()}`, order, 'shipped');
+    } catch (_) {}
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Shiprocket AWB Error', error: error.message });
+  }
+});
+
+// 2. Generate Pickup
+router.post('/orders/:id/shiprocket/pickup', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.shiprocketShipmentId) return res.status(400).json({ message: 'Shipment ID missing' });
+    const result = await shiprocketService.generatePickup(order.shiprocketShipmentId);
+    res.json({ message: 'Pickup scheduled', result });
+  } catch (error) {
+    res.status(500).json({ message: 'Pickup Error', error: error.message });
+  }
+});
+
+// 3. Generate & Print Manifest
+router.post('/orders/:id/shiprocket/manifest', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.shiprocketShipmentId) return res.status(400).json({ message: 'Shipment ID missing' });
+
+    await shiprocketService.generateManifest(order.shiprocketShipmentId);
+    const printResult = await shiprocketService.printManifest(order.shiprocketOrderId);
+
+    if (printResult.manifest_url) {
+      order.manifestUrl = printResult.manifest_url;
+      await order.save();
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Manifest Error', error: error.message });
+  }
+});
+
+// 4. Generate Label
+router.post('/orders/:id/shiprocket/label', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.shiprocketShipmentId) return res.status(400).json({ message: 'Shipment ID missing' });
+
+    const result = await shiprocketService.generateLabel(order.shiprocketShipmentId);
+    if (result.label_url) {
+      order.labelUrl = result.label_url;
+      await order.save();
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Label Error', error: error.message });
+  }
+});
+
+// 5. Print Invoice
+router.post('/orders/:id/shiprocket/invoice', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.shiprocketOrderId) return res.status(400).json({ message: 'Shiprocket Order ID missing' });
+
+    const result = await shiprocketService.printInvoice(order.shiprocketOrderId);
+    if (result.invoice_url) {
+      order.invoiceUrl = result.invoice_url;
+      await order.save();
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Invoice Error', error: error.message });
+  }
+});
+
+// 6. Track by AWB
+router.get('/orders/:id/shiprocket/track', adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order || !order.awbCode) return res.status(400).json({ message: 'AWB code not found on order' });
+    const result = await shiprocketService.trackAWB(order.awbCode);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Tracking Error', error: error.message });
   }
 });
 

@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
 const { sendOrderEmail } = require('../services/emailService');
+const shiprocketService = require('../services/shiprocketService');
 const PDFDocument = require('pdfkit');
 
 const router = express.Router();
@@ -57,6 +58,21 @@ router.post('/', auth, async (req, res) => {
     await Cart.findOneAndDelete({ user: req.user._id });
 
     const user = await User.findById(req.user._id);
+
+    // Auto-push to Shiprocket for COD orders (online orders pushed after payment verify)
+    if (order.paymentMethod === 'cod') {
+      try {
+        const srRes = await shiprocketService.createAdhocOrder(order, user);
+        if (srRes && srRes.order_id) {
+          order.shiprocketOrderId = String(srRes.order_id);
+          order.shiprocketShipmentId = String(srRes.shipment_id);
+          await order.save();
+        }
+      } catch (srErr) {
+        console.error('Shiprocket COD order push failed:', srErr.message);
+      }
+    }
+
     if (user?.email) {
       sendOrderEmail(user.email, `Order Confirmed — #${order._id.toString().slice(-8).toUpperCase()}`, order, 'placed');
     }
@@ -142,12 +158,12 @@ router.post('/:id/return', auth, async (req, res) => {
       for (const reqItem of req.body.items) {
         const orderItem = order.items.find(i => i.product.toString() === reqItem.product.toString());
         if (!orderItem) return res.status(400).json({ message: `Item not found in order` });
-        
+
         const availableToReturn = orderItem.quantity - (orderItem.returnedQuantity || 0);
         if (reqItem.quantity > availableToReturn || reqItem.quantity < 1) {
           return res.status(400).json({ message: `Invalid return quantity for ${orderItem.name}` });
         }
-        
+
         returnItems.push({
           product: orderItem.product,
           quantity: reqItem.quantity,
@@ -158,22 +174,22 @@ router.post('/:id/return', auth, async (req, res) => {
       // Default: Return all remaining items
       returnItems = order.items
         .filter(i => i.quantity > (i.returnedQuantity || 0))
-        .map(i => ({ 
-           product: i.product, 
-           quantity: i.quantity - (i.returnedQuantity || 0), 
-           price: i.price 
+        .map(i => ({
+          product: i.product,
+          quantity: i.quantity - (i.returnedQuantity || 0),
+          price: i.price
         }));
       if (returnItems.length === 0) return res.status(400).json({ message: 'All items have already been returned.' });
     }
 
-    order.returnRequest = { 
-      requested: true, 
-      reason: req.body.reason || 'No reason', 
-      status: 'pending', 
+    order.returnRequest = {
+      requested: true,
+      reason: req.body.reason || 'No reason',
+      status: 'pending',
       items: returnItems,
-      requestedAt: new Date() 
+      requestedAt: new Date()
     };
-    
+
     // Determine if it's a partial return (checking what's left vs total)
     let isPartial = false;
     let totalWillBeReturned = 0;
@@ -263,12 +279,12 @@ router.get('/:id/invoice', auth, async (req, res) => {
     y += 10;
     doc.moveTo(50, y).lineTo(550, y).strokeColor('#eee').stroke();
     y += 12;
-    
+
     // Subtotal
     const subtotal = order.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     doc.fontSize(10).font('Helvetica').fillColor('#666').text('Subtotal:', 400, y).text(`Rs.${subtotal.toLocaleString()}`, 480, y, { width: 60, align: 'right' });
     y += 18;
-    
+
     // Shipping
     doc.text('Shipping:', 400, y).fillColor('#10B981').text('Free', 480, y, { width: 60, align: 'right' });
     y += 18;

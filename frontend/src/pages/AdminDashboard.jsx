@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { HiCurrencyRupee, HiShoppingBag, HiUsers, HiClipboardList, HiPencil, HiTrash, HiPlus, HiCheck, HiX, HiRefresh, HiEye, HiArrowLeft, HiTrendingUp, HiExclamation, HiMail, HiTag, HiPhotograph, HiSearch } from 'react-icons/hi';
+import { HiCurrencyRupee, HiShoppingBag, HiUsers, HiClipboardList, HiPencil, HiTrash, HiPlus, HiCheck, HiX, HiRefresh, HiEye, HiArrowLeft, HiTrendingUp, HiExclamation, HiMail, HiTag, HiPhotograph, HiSearch, HiTruck } from 'react-icons/hi';
 import API from '../utils/api';
 import toast from 'react-hot-toast';
 
@@ -40,9 +40,9 @@ function SearchBox({ value, onChange, placeholder = 'Search...' }) {
   return (
     <div className="relative flex-1 max-w-sm">
       <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg" />
-      <input 
-        value={value} 
-        onChange={e => onChange(e.target.value)} 
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         className="input-field pl-10 py-2 text-sm w-full"
       />
@@ -250,11 +250,65 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Shiprocket Logistics Panel */}
+        <div className="glass rounded-xl p-6 mb-6" style={{ borderColor: 'rgba(59,130,246,0.3)' }}>
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><HiTruck className="text-blue-400" /> Logistics & Shipping (Shiprocket)</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+            <div><p className="text-gray-500 text-xs uppercase tracking-wider mb-1">SR Order ID</p><p className="text-white text-sm font-medium">{order.shiprocketOrderId || '—'}</p></div>
+            <div><p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Shipment ID</p><p className="text-white text-sm font-medium">{order.shiprocketShipmentId || '—'}</p></div>
+            <div><p className="text-gray-500 text-xs uppercase tracking-wider mb-1">AWB Code</p><p className="text-accent text-sm font-bold">{order.awbCode || 'Pending'}</p></div>
+            <div><p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Courier</p><p className="text-white text-sm">{order.courierName || 'Pending'}</p></div>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+            {!order.awbCode && order.shiprocketShipmentId && (
+              <button onClick={async () => {
+                const tid = toast.loading('Assigning AWB...');
+                try { const r = await API.post(`/admin/orders/${order._id}/shiprocket/awb`); setSelectedOrder(r.data); toast.success('AWB Assigned! Order marked Shipped.', { id: tid }); loadData(); }
+                catch (e) { toast.error(e.response?.data?.message || 'AWB Failed', { id: tid }); }
+              }} className="btn-primary text-xs py-2 px-4">🏷 Assign AWB</button>
+            )}
+            {!order.awbCode && !order.shiprocketShipmentId && (
+              <p className="text-gray-500 text-xs italic">⚠ Order not yet pushed to Shiprocket. Place a new order to trigger auto-push.</p>
+            )}
+            {order.awbCode && (
+              <button onClick={async () => {
+                const tid = toast.loading('Generating Pickup...');
+                try { await API.post(`/admin/orders/${order._id}/shiprocket/pickup`); toast.success('Pickup scheduled!', { id: tid }); }
+                catch (e) { toast.error(e.response?.data?.message || 'Pickup Failed', { id: tid }); }
+              }} className="btn-accent text-xs py-2 px-4">🚚 Generate Pickup</button>
+            )}
+            {order.awbCode && !order.manifestUrl && (
+              <button onClick={async () => {
+                const tid = toast.loading('Generating Manifest...');
+                try { const r = await API.post(`/admin/orders/${order._id}/shiprocket/manifest`); setSelectedOrder(r.data); toast.success('Manifest ready!', { id: tid }); loadData(); }
+                catch (e) { toast.error('Manifest Failed', { id: tid }); }
+              }} className="btn-secondary text-xs py-2 px-4">📋 Gen Manifest</button>
+            )}
+            {order.manifestUrl && (<a href={order.manifestUrl} target="_blank" rel="noreferrer" className="btn-secondary text-xs py-2 px-4 no-underline text-white">📋 Print Manifest</a>)}
+            {order.awbCode && !order.labelUrl && (
+              <button onClick={async () => {
+                const tid = toast.loading('Generating Label...');
+                try { const r = await API.post(`/admin/orders/${order._id}/shiprocket/label`); setSelectedOrder(r.data); toast.success('Label ready!', { id: tid }); loadData(); }
+                catch (e) { toast.error('Label Failed', { id: tid }); }
+              }} className="btn-secondary text-xs py-2 px-4">🏷 Gen Label</button>
+            )}
+            {order.labelUrl && (<a href={order.labelUrl} target="_blank" rel="noreferrer" className="btn-secondary text-xs py-2 px-4 no-underline text-white">🏷 Print Label</a>)}
+            {order.shiprocketOrderId && !order.invoiceUrl && (
+              <button onClick={async () => {
+                const tid = toast.loading('Generating Invoice...');
+                try { const r = await API.post(`/admin/orders/${order._id}/shiprocket/invoice`); setSelectedOrder(r.data); toast.success('Invoice ready!', { id: tid }); loadData(); }
+                catch (e) { toast.error('Invoice Failed', { id: tid }); }
+              }} className="btn-secondary text-xs py-2 px-4">📄 Gen Invoice</button>
+            )}
+            {order.invoiceUrl && (<a href={order.invoiceUrl} target="_blank" rel="noreferrer" className="btn-secondary text-xs py-2 px-4 no-underline text-white">📄 Print Invoice</a>)}
+          </div>
+        </div>
+
         {order.returnRequest?.status === 'pending' && (
           <div className="glass rounded-xl p-5 mb-6" style={{ borderColor: 'rgba(245,158,11,0.3)' }}>
             <p className="text-warning font-medium flex items-center gap-1 mb-2"><HiRefresh /> Return Requested</p>
             <p className="text-gray-400 text-sm mb-3">Reason: {order.returnRequest.reason}</p>
-            
+
             {order.returnRequest.items && order.returnRequest.items.length > 0 && (
               <div className="mb-4">
                 <p className="text-white text-sm font-semibold mb-2">Items to Return:</p>
@@ -366,17 +420,17 @@ export default function AdminDashboard() {
             <div className="glass-strong rounded-xl p-6 mb-6 animate-fadeIn">
               <h3 className="text-white font-semibold mb-4">{productFormData._id ? 'Edit Product' : 'Add New Product'}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input value={productFormData.name} onChange={e => setProductFormData({...productFormData, name: e.target.value})} className="input-field" placeholder="Name" />
-                <select value={productFormData.category} onChange={e => setProductFormData({...productFormData, category: e.target.value})} className="admin-select" style={{padding:'0.75rem 1rem', borderRadius:'0.75rem', width:'100%'}}>
+                <input value={productFormData.name} onChange={e => setProductFormData({ ...productFormData, name: e.target.value })} className="input-field" placeholder="Name" />
+                <select value={productFormData.category} onChange={e => setProductFormData({ ...productFormData, category: e.target.value })} className="admin-select" style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', width: '100%' }}>
                   <option value="">Select Category</option>
                   {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                 </select>
-                <input value={productFormData.price} onChange={e => setProductFormData({...productFormData, price: e.target.value})} className="input-field" placeholder="Price" type="number" />
-                <input value={productFormData.originalPrice} onChange={e => setProductFormData({...productFormData, originalPrice: e.target.value})} className="input-field" placeholder="Original Price" type="number" />
-                <input value={productFormData.stock} onChange={e => setProductFormData({...productFormData, stock: e.target.value})} className="input-field" placeholder="Stock" type="number" />
-                
+                <input value={productFormData.price} onChange={e => setProductFormData({ ...productFormData, price: e.target.value })} className="input-field" placeholder="Price" type="number" />
+                <input value={productFormData.originalPrice} onChange={e => setProductFormData({ ...productFormData, originalPrice: e.target.value })} className="input-field" placeholder="Original Price" type="number" />
+                <input value={productFormData.stock} onChange={e => setProductFormData({ ...productFormData, stock: e.target.value })} className="input-field" placeholder="Stock" type="number" />
+
                 <div className="flex items-center gap-2 pl-2">
-                  <input type="checkbox" id="featured" checked={Boolean(productFormData.featured)} onChange={e => setProductFormData({...productFormData, featured: e.target.checked})} className="cursor-pointer" />
+                  <input type="checkbox" id="featured" checked={Boolean(productFormData.featured)} onChange={e => setProductFormData({ ...productFormData, featured: e.target.checked })} className="cursor-pointer" />
                   <label htmlFor="featured" className="text-sm text-gray-300 cursor-pointer">Featured Product</label>
                 </div>
 
@@ -390,7 +444,7 @@ export default function AdminDashboard() {
                     setProductImages(files);
                     setImagePreviews(files.map(f => URL.createObjectURL(f)));
                   }} className="input-field text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary/20 file:text-primary file:font-medium file:cursor-pointer mb-2" />
-                  
+
                   {productFormData._id && (
                     <label className="flex items-center gap-2 text-sm text-gray-400 mt-2 mb-2 cursor-pointer">
                       <input type="checkbox" checked={keepExistingImages} onChange={e => setKeepExistingImages(e.target.checked)} className="cursor-pointer" />
@@ -414,7 +468,7 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
-                <textarea value={productFormData.description} onChange={e => setProductFormData({...productFormData, description: e.target.value})} className="input-field sm:col-span-2" placeholder="Description" rows="3" />
+                <textarea value={productFormData.description} onChange={e => setProductFormData({ ...productFormData, description: e.target.value })} className="input-field sm:col-span-2" placeholder="Description" rows="3" />
               </div>
               <div className="flex gap-2 mt-5">
                 <button onClick={handleProductSubmit} className="btn-accent px-6">Save Product</button>
@@ -427,8 +481,8 @@ export default function AdminDashboard() {
               <table className="w-full text-sm">
                 <thead><tr className="text-gray-400 text-left border-b border-white/10"><th className="p-4">Product</th><th className="p-4">Category</th><th className="p-4">Price</th><th className="p-4">Stock</th><th className="p-4">Sold</th><th className="p-4">Actions</th></tr></thead>
                 <tbody>
-                  {products.filter(p => 
-                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  {products.filter(p =>
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     p.category.toLowerCase().includes(searchQuery.toLowerCase())
                   ).map(p => (
                     <tr key={p._id} className="border-b border-white/5 hover:bg-white/3 transition">
@@ -453,10 +507,10 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-4">
               <p className="text-gray-400 text-sm whitespace-nowrap">
                 Filtered: {orders.filter(order => {
-                  const mSearch = order._id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  const mSearch = order._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     order.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
-                  
+
                   let mFilter = true;
                   if (orderFilter === 'placed') mFilter = order.orderStatus === 'placed';
                   else if (orderFilter === 'shipped') mFilter = order.orderStatus === 'shipped';
@@ -470,8 +524,8 @@ export default function AdminDashboard() {
                   return mSearch && mFilter;
                 }).length} orders
               </p>
-              <select 
-                value={orderFilter} 
+              <select
+                value={orderFilter}
                 onChange={e => setOrderFilter(e.target.value)}
                 className="input-field py-1.5 text-sm"
               >
@@ -495,10 +549,10 @@ export default function AdminDashboard() {
             <SearchBox value={searchQuery} onChange={setSearchQuery} placeholder="Search order ID or customer..." />
           </div>
           {orders.filter(order => {
-            const mSearch = order._id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            const mSearch = order._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
               order.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
               order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
-            
+
             let mFilter = true;
             if (orderFilter === 'placed') mFilter = order.orderStatus === 'placed';
             else if (orderFilter === 'shipped') mFilter = order.orderStatus === 'shipped';
@@ -526,83 +580,84 @@ export default function AdminDashboard() {
             const isPendingReturn = order.returnRequest?.status === 'pending';
             const ss = statusStyles[st] || statusStyles.placed;
             return (
-            <div key={order._id} className="glass rounded-xl p-5 transition-all"
-              style={{ 
-                borderLeft: isPendingReturn ? '4px solid #F59E0B' : `4px solid ${ss.accent}`, 
-                background: isPendingReturn || isPendingRefund ? 'rgba(245,158,11,0.08)' : ss.bg,
-                borderColor: isPendingReturn ? 'rgba(245,158,11,0.4)' : undefined
-              }}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                <div>
+              <div key={order._id} className="glass rounded-xl p-5 transition-all"
+                style={{
+                  borderLeft: isPendingReturn ? '4px solid #F59E0B' : `4px solid ${ss.accent}`,
+                  background: isPendingReturn || isPendingRefund ? 'rgba(245,158,11,0.08)' : ss.bg,
+                  borderColor: isPendingReturn ? 'rgba(245,158,11,0.4)' : undefined
+                }}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span style={{ fontSize: '16px' }}>{ss.emoji}</span>
+                      <p className="text-white font-medium">#{order._id.slice(-8).toUpperCase()}</p>
+                      <span className="badge text-xs" style={{ background: `${ss.accent}20`, color: ss.accent }}>{st.toUpperCase()}</span>
+                      {/* Payment method badge */}
+                      {isCOD ? (
+                        <span className="badge text-xs bg-amber-500/15 text-amber-400">💵 COD (+₹{order.codFee || 25})</span>
+                      ) : order.paymentId ? (
+                        <span className="badge text-xs bg-green-500/15 text-green-400">💳 Online</span>
+                      ) : null}
+                      {hasRefund && (
+                        <span className={`badge text-xs ${isPendingRefund ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>
+                          💰 Refund: ₹{order.refund.amount?.toLocaleString()} ({order.refund.status})
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-sm mt-1">{order.user?.name} <span className="text-gray-600">·</span> {order.user?.email}</p>
+                    <p className="text-gray-500 text-xs">{order.user?.phone || ''} · {new Date(order.createdAt).toLocaleString('en-IN')}</p>
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span style={{ fontSize: '16px' }}>{ss.emoji}</span>
-                    <p className="text-white font-medium">#{order._id.slice(-8).toUpperCase()}</p>
-                    <span className="badge text-xs" style={{ background: `${ss.accent}20`, color: ss.accent }}>{st.toUpperCase()}</span>
-                    {/* Payment method badge */}
-                    {isCOD ? (
-                      <span className="badge text-xs bg-amber-500/15 text-amber-400">💵 COD (+₹{order.codFee || 25})</span>
-                    ) : order.paymentId ? (
-                      <span className="badge text-xs bg-green-500/15 text-green-400">💳 Online</span>
-                    ) : null}
-                    {hasRefund && (
-                      <span className={`badge text-xs ${isPendingRefund ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}>
-                        💰 Refund: ₹{order.refund.amount?.toLocaleString()} ({order.refund.status})
-                      </span>
-                    )}
+                    <span className="text-white font-bold text-lg">₹{order.totalAmount?.toLocaleString()}</span>
+                    <select value={order.orderStatus} onChange={e => requestStatusChange(order._id, e.target.value)}
+                      className="admin-select text-xs">
+                      {['placed', 'shipped', 'delivered', 'cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
-                  <p className="text-gray-400 text-sm mt-1">{order.user?.name} <span className="text-gray-600">·</span> {order.user?.email}</p>
-                  <p className="text-gray-500 text-xs">{order.user?.phone || ''} · {new Date(order.createdAt).toLocaleString('en-IN')}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-white font-bold text-lg">₹{order.totalAmount?.toLocaleString()}</span>
-                  <select value={order.orderStatus} onChange={e => requestStatusChange(order._id, e.target.value)}
-                    className="admin-select text-xs">
-                    {['placed', 'shipped', 'delivered', 'cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-              {/* Shipping address */}
-              {order.shippingAddress && (
-                <div className="glass rounded-lg p-2 px-3 mb-3 text-xs text-gray-400">
-                  📍 {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
-                  {order.shippingAddress.phone && <span className="ml-2">📞 {order.shippingAddress.phone}</span>}
-                </div>
-              )}
-              <div className="overflow-x-auto mb-3">
-                <table className="w-full text-xs">
-                  <thead><tr className="text-gray-500"><th className="text-left py-1">Item</th><th className="text-center py-1">Qty</th><th className="text-right py-1">Price</th><th className="text-right py-1">Subtotal</th></tr></thead>
-                  <tbody>
-                    {order.items.map((item, i) => (
-                      <tr key={i} className="border-t border-white/5">
-                        <td className="py-1.5"><div className="flex items-center gap-2"><img src={item.image || item.product?.image} alt="" className="w-7 h-7 rounded object-cover" /><span className="text-gray-300">{item.name || item.product?.name}</span></div></td>
-                        <td className="py-1.5 text-center text-gray-300">{item.quantity}</td>
-                        <td className="py-1.5 text-right text-gray-300">₹{item.price?.toLocaleString()}</td>
-                        <td className="py-1.5 text-right text-white">₹{(item.price * item.quantity)?.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => setSelectedOrder(order)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"><HiEye /> Details</button>
-                {order.returnRequest?.status === 'pending' && (
-                  <div className="flex items-center gap-2 glass rounded-lg px-3 py-1.5">
-                    <span className="text-warning text-xs">⚠ Return requested</span>
-                    <button onClick={() => handleReturnAction(order._id, 'approve')} className="text-success text-xs font-medium hover:underline bg-transparent border-none cursor-pointer">Approve</button>
-                    <button onClick={() => handleReturnAction(order._id, 'reject')} className="text-error text-xs font-medium hover:underline bg-transparent border-none cursor-pointer">Reject</button>
+                {/* Shipping address */}
+                {order.shippingAddress && (
+                  <div className="glass rounded-lg p-2 px-3 mb-3 text-xs text-gray-400">
+                    📍 {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}
+                    {order.shippingAddress.phone && <span className="ml-2">📞 {order.shippingAddress.phone}</span>}
                   </div>
                 )}
-                {isPendingRefund && (
-                  <button onClick={async () => {
-                    try { await API.put(`/admin/orders/${order._id}/refund-complete`); toast.success('Refund marked complete'); loadData(); }
-                    catch (err) { toast.error('Failed to update refund'); }
-                  }} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
-                    💰 Mark Refund Complete
-                  </button>
-                )}
+                <div className="overflow-x-auto mb-3">
+                  <table className="w-full text-xs">
+                    <thead><tr className="text-gray-500"><th className="text-left py-1">Item</th><th className="text-center py-1">Qty</th><th className="text-right py-1">Price</th><th className="text-right py-1">Subtotal</th></tr></thead>
+                    <tbody>
+                      {order.items.map((item, i) => (
+                        <tr key={i} className="border-t border-white/5">
+                          <td className="py-1.5"><div className="flex items-center gap-2"><img src={item.image || item.product?.image} alt="" className="w-7 h-7 rounded object-cover" /><span className="text-gray-300">{item.name || item.product?.name}</span></div></td>
+                          <td className="py-1.5 text-center text-gray-300">{item.quantity}</td>
+                          <td className="py-1.5 text-right text-gray-300">₹{item.price?.toLocaleString()}</td>
+                          <td className="py-1.5 text-right text-white">₹{(item.price * item.quantity)?.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={() => setSelectedOrder(order)} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"><HiEye /> Details</button>
+                  {order.returnRequest?.status === 'pending' && (
+                    <div className="flex items-center gap-2 glass rounded-lg px-3 py-1.5">
+                      <span className="text-warning text-xs">⚠ Return requested</span>
+                      <button onClick={() => handleReturnAction(order._id, 'approve')} className="text-success text-xs font-medium hover:underline bg-transparent border-none cursor-pointer">Approve</button>
+                      <button onClick={() => handleReturnAction(order._id, 'reject')} className="text-error text-xs font-medium hover:underline bg-transparent border-none cursor-pointer">Reject</button>
+                    </div>
+                  )}
+                  {isPendingRefund && (
+                    <button onClick={async () => {
+                      try { await API.put(`/admin/orders/${order._id}/refund-complete`); toast.success('Refund marked complete'); loadData(); }
+                      catch (err) { toast.error('Failed to update refund'); }
+                    }} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
+                      💰 Mark Refund Complete
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          );})}
+            );
+          })}
         </div>
       )}
 
@@ -678,7 +733,7 @@ export default function AdminDashboard() {
               <div key={cat._id} className="glass rounded-xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
                 {editCategory?._id === cat._id ? (
                   <div className="flex flex-1 items-center gap-2">
-                    <input value={editCategory.name} onChange={e => setEditCategory({...editCategory, name: e.target.value})} className="input-field py-1.5 text-sm flex-1" />
+                    <input value={editCategory.name} onChange={e => setEditCategory({ ...editCategory, name: e.target.value })} className="input-field py-1.5 text-sm flex-1" />
                     <button onClick={async () => {
                       try { await API.put(`/categories/${cat._id}`, { name: editCategory.name }); toast.success('Updated'); setEditCategory(null); loadData(); }
                       catch (err) { toast.error('Failed'); }
@@ -694,7 +749,7 @@ export default function AdminDashboard() {
                       <span className="text-white font-medium text-sm">{cat.name}</span>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => setEditCategory({...cat})} className="p-1.5 text-primary hover:bg-primary/10 rounded bg-transparent border-none cursor-pointer"><HiPencil /></button>
+                      <button onClick={() => setEditCategory({ ...cat })} className="p-1.5 text-primary hover:bg-primary/10 rounded bg-transparent border-none cursor-pointer"><HiPencil /></button>
                       <button onClick={async () => {
                         try { await API.delete(`/categories/${cat._id}`); toast.success('Deleted'); loadData(); }
                         catch (err) { toast.error('Failed'); }
@@ -743,12 +798,12 @@ export default function AdminDashboard() {
                     <p className="text-gray-300 text-sm mb-3">{n.message}</p>
                     <div className="flex gap-2">
                       {n.order && (
-                        <button onClick={() => { 
+                        <button onClick={() => {
                           const oid = typeof n.order === 'object' ? n.order._id : n.order;
                           const fullOrder = orders.find(o => o._id === oid);
                           if (fullOrder) {
-                            setSelectedOrder(fullOrder); 
-                            setTab('orders'); 
+                            setSelectedOrder(fullOrder);
+                            setTab('orders');
                           } else {
                             toast.error('Order not found in memory. Please refresh.');
                           }

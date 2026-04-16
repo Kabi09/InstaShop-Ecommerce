@@ -7,6 +7,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { sendOrderEmail } = require('../services/emailService');
+const shiprocketService = require('../services/shiprocketService');
 
 const router = express.Router();
 
@@ -110,9 +111,23 @@ router.post('/verify', auth, async (req, res) => {
     order.razorpaySignature = razorpay_signature;
     order.paymentStatus = 'paid';
     order.statusHistory.push({ status: 'paid', note: 'Payment received successfully' });
+
+    // Push to Shiprocket for paid online orders
+    if (!order.shiprocketOrderId) {
+      try {
+        const user = await User.findById(req.user._id);
+        const srRes = await shiprocketService.createAdhocOrder(order, user);
+        if (srRes && srRes.order_id) {
+          order.shiprocketOrderId = String(srRes.order_id);
+          order.shiprocketShipmentId = String(srRes.shipment_id);
+        }
+      } catch (srErr) {
+        console.error('Shiprocket push failed (verify):', srErr.message);
+      }
+    }
     await order.save();
 
-    // Also clear cart here as a safety net (cart may already be gone — findOneAndDelete handles null gracefully)
+    // Also clear cart here as a safety net
     await Cart.findOneAndDelete({ user: req.user._id });
 
     // Send confirmation email
@@ -228,6 +243,20 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         order.paymentId = paymentData.id;
         order.paymentStatus = 'paid';
         order.statusHistory.push({ status: 'paid', note: 'Payment received via webhook' });
+
+        // Push to Shiprocket if not already created
+        if (!order.shiprocketOrderId) {
+          try {
+            const user = await User.findById(order.user);
+            const srRes = await shiprocketService.createAdhocOrder(order, user);
+            if (srRes && srRes.order_id) {
+              order.shiprocketOrderId = String(srRes.order_id);
+              order.shiprocketShipmentId = String(srRes.shipment_id);
+            }
+          } catch (srErr) {
+            console.error('Shiprocket push failed (webhook):', srErr.message);
+          }
+        }
         await order.save();
 
         // Clear cart for the user
