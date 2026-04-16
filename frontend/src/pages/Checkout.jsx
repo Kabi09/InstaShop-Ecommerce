@@ -176,6 +176,8 @@ export default function Checkout() {
         name: 'InstaShop',
         description: 'Order Payment',
         order_id: data.orderId,
+        callback_url: `${API.defaults.baseURL.replace('/api', '')}/api/payment/verify-redirect`,
+        redirect: true,
         handler: async (response) => {
           let verified = false;
           try {

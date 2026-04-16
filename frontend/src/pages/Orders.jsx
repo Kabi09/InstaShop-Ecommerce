@@ -191,6 +191,8 @@ export default function Orders() {
         name: 'InstaShop',
         description: 'Complete Payment',
         order_id: data.orderId,
+        callback_url: `${API.defaults.baseURL.replace('/api', '')}/api/payment/verify-redirect`,
+        redirect: true,
         handler: async (response) => {
           try {
             await API.post('/payment/verify', {
