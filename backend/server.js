@@ -47,7 +47,10 @@ app.get("/", (req, res) => {
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ DB connected successfully"))
-  .catch(() => console.log("❌ DB not connected"));
+  .catch((err) => {
+    console.log("❌ DB not connected");
+    console.log(err.message); // VERY IMPORTANT
+  });
 
 // Start server
 app.listen(process.env.PORT || 5000, () => {
