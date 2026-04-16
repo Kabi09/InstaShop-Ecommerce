@@ -66,7 +66,7 @@ const sendOrderEmail = async (to, subject, order, type = 'placed') => {
         </div>` : ''}
 
         <div style="text-align: center; margin-top: 40px;">
-          <a href="${process.env.FRONTEND_URL}/orders" style="display: inline-block; background-color: ${info.color}; color: #ffffff; padding: 14px 35px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">View Order Details</a>
+          <a href="${process.env.MAIN_URL}/orders" style="display: inline-block; background-color: ${info.color}; color: #ffffff; padding: 14px 35px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">View Order Details</a>
         </div>
 
         <div style="border-top: 1px solid #f3f4f6; padding-top: 30px; margin-top: 40px; text-align: center;">
