@@ -25,9 +25,17 @@
 - **Dynamic Invoicing**: Reflects payment method (COD/Online) and status (Pending/Paid) automatically based on order lifecycle.
 
 ### 🛡️ Secure Admin Control Center
-- **Order Management**: Real-time status updates (Placed → Shipped → Delivered).
-- **Inventory Tracking**: Automated stock deduction upon purchase.
+- **Advanced Order Management**: Real-time status updates (Placed → Shipped → Delivered) with full status history.
+- **Shiprocket Logistics**: Automated AWB generation, manifest creation, and pickup scheduling.
+- **Inventory Tracking**: Automated stock deduction upon purchase and restoration on cancellation/return.
+- **Manual Tracking Overrides**: Flexibility to manually update tracking links and courier details for custom shipping methods.
 - **Branded Communications**: Professional email notifications for order confirmation and status changes.
+
+### 🚚 Smart Logistics (Shiprocket)
+- **Automated Fulfillment**: Auto-push orders to Shiprocket for rapid fulfillment.
+- **One-Click Documentation**: Generate and print shipping labels, manifests, and invoices directly from the admin panel.
+- **Real-time Tracking**: Integrated AWB tracking for customers to monitor their parcels live.
+- **Pickup Automation**: Automated pickup scheduling with customizable pickup locations.
 
 ---
 
@@ -44,6 +52,8 @@
 - **MongoDB & Mongoose**: Scalable NoSQL database for flexible product schemas.
 - **JWT & Bcrypt**: Secure, token-based authentication system.
 - **Nodemailer**: Automated SMTP-based communication.
+- **Shiprocket API**: Enterprise-grade logistics and shipping automation.
+- **Razorpay API**: Seamless and secure payment gateway integration.
 
 ---
 
@@ -58,7 +68,13 @@ For the most reliable performance, we recommend deploying the `frontend` and `ba
    - Add Environment Variable `VITE_API_URL` pointing to your backend production URL.
 3. **Backend Project**:
    - Set **Root Directory** to `backend`.
-   - Add your `.env` variables (MongoDB URI, Email Credentials, Razorpay Keys).
+   - Add your `.env` variables:
+     - `MONGO_URI`: Your MongoDB connection string.
+     - `JWT_SECRET`: Secret key for authentication.
+     - `EMAIL_HOST`, `EMAIL_USER`, `EMAIL_PASS`: SMTP credentials.
+     - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`: Razorpay credentials.
+     - `SHIPROCKET_EMAIL`, `SHIPROCKET_PASSWORD`: Shiprocket credentials.
+     - `SHIPROCKET_PICKUP_LOCATION`: Default pickup location name (e.g., 'Primary').
 
 ---
 
