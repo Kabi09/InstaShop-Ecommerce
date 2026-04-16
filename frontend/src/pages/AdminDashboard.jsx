@@ -75,6 +75,9 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [orderFilter, setOrderFilter] = useState('all');
+  const [manualAwb, setManualAwb] = useState('');
+  const [manualCourier, setManualCourier] = useState('');
+  const [manualTrackingUrl, setManualTrackingUrl] = useState('');
 
   useEffect(() => { loadData(); }, []);
 
@@ -96,8 +99,32 @@ export default function AdminDashboard() {
   const markAsRead = async (id) => {
     try {
       await API.put(`/notifications/${id}/read`);
-      setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
     } catch (err) { console.error('Failed to mark as read'); }
+  };
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setManualAwb(selectedOrder.awbCode || '');
+      setManualCourier(selectedOrder.courierName || '');
+      setManualTrackingUrl(selectedOrder.trackingUrl || '');
+    }
+  }, [selectedOrder]);
+
+  const handleUpdateTracking = async () => {
+    const tid = toast.loading('Updating tracking info...');
+    try {
+      const res = await API.put(`/admin/orders/${selectedOrder._id}`, {
+        awbCode: manualAwb,
+        courierName: manualCourier,
+        trackingUrl: manualTrackingUrl,
+        orderStatus: selectedOrder.orderStatus === 'placed' ? 'shipped' : selectedOrder.orderStatus
+      });
+      setSelectedOrder(res.data);
+      toast.success('Tracking info updated!', { id: tid });
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update tracking', { id: tid });
+    }
   };
 
   const deleteNotification = async (id) => {
@@ -301,6 +328,33 @@ export default function AdminDashboard() {
               }} className="btn-secondary text-xs py-2 px-4">📄 Gen Invoice</button>
             )}
             {order.invoiceUrl && (<a href={order.invoiceUrl} target="_blank" rel="noreferrer" className="btn-secondary text-xs py-2 px-4 no-underline text-white">📄 Print Invoice</a>)}
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <h4 className="text-gray-300 text-sm font-medium mb-4 flex items-center gap-2">🛠 Manual Tracking Override</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-gray-500 text-xs block mb-1 uppercase tracking-wider">Tracking ID / AWB</label>
+                <input type="text" value={manualAwb} onChange={e => setManualAwb(e.target.value)} className="input-field py-2 text-xs w-full" placeholder="e.g. 190411906..." />
+              </div>
+              <div>
+                <label className="text-gray-500 text-xs block mb-1 uppercase tracking-wider">Courier Partner</label>
+                <input type="text" value={manualCourier} onChange={e => setManualCourier(e.target.value)} className="input-field py-2 text-xs w-full" placeholder="e.g. Delhivery, Bluedart" />
+              </div>
+              <div>
+                <label className="text-gray-500 text-xs block mb-1 uppercase tracking-wider">Tracking Link</label>
+                <input type="text" value={manualTrackingUrl} onChange={e => setManualTrackingUrl(e.target.value)} className="input-field py-2 text-xs w-full" placeholder="https://tracking-xyz.com/..." />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button 
+                onClick={handleUpdateTracking} 
+                className="btn-primary text-xs py-2 px-6 flex items-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+              >
+                <HiCheck className="text-sm" /> Save Tracking Info
+              </button>
+            </div>
           </div>
         </div>
 

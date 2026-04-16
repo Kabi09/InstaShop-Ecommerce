@@ -419,7 +419,7 @@ export default function Orders() {
               </div>
               <div className="sm:text-right">
                 <a
-                  href={`https://shiprocket.co/tracking/${o.awbCode}`}
+                  href={o.trackingUrl || `https://shiprocket.co/tracking/${o.awbCode}`}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-primary inline-flex items-center gap-2 text-sm py-2.5 px-6"

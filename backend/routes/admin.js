@@ -74,11 +74,21 @@ router.get('/orders', adminAuth, async (req, res) => {
 // Update order status (admin) — sends email + tracks history
 router.put('/orders/:id', adminAuth, async (req, res) => {
   try {
-    const { orderStatus, paymentStatus } = req.body;
+    const { orderStatus, paymentStatus, awbCode, courierName, trackingUrl } = req.body;
     const order = await Order.findById(req.params.id).populate('user', 'name email phone');
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     const oldStatus = order.orderStatus;
+
+    // Manual tracking details update
+    if (awbCode || courierName || trackingUrl) {
+      if (awbCode && awbCode !== order.awbCode) {
+        order.awbCode = awbCode;
+        order.statusHistory.push({ status: 'info_update', note: `Tracking ID updated to: ${awbCode}` });
+      }
+      if (courierName) order.courierName = courierName;
+      if (trackingUrl) order.trackingUrl = trackingUrl;
+    }
 
     if (orderStatus) {
       order.orderStatus = orderStatus;

@@ -51,6 +51,7 @@ const orderSchema = new mongoose.Schema({
   manifestUrl: { type: String },
   labelUrl: { type: String },
   invoiceUrl: { type: String },
+  trackingUrl: { type: String },
   statusHistory: [{
     status: String,
     timestamp: { type: Date, default: Date.now },
