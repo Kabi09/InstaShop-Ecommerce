@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { HiClipboardList, HiRefresh, HiDownload, HiX, HiEye, HiArrowLeft, HiExclamation, HiCurrencyRupee, HiPhone } from 'react-icons/hi';
+import { HiClipboardList, HiRefresh, HiDownload, HiX, HiEye, HiArrowLeft, HiExclamation, HiCurrencyRupee, HiPhone, HiCreditCard, HiBadgeCheck } from 'react-icons/hi';
 import API from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const statusColors = {
@@ -11,6 +12,22 @@ const statusColors = {
   delivered: 'bg-green-500/20 text-green-400',
   cancelled: 'bg-red-500/20 text-red-400',
   returned: 'bg-purple-500/20 text-purple-400',
+};
+
+const paymentStatusColors = {
+  pending: 'bg-yellow-500/20 text-yellow-400',
+  paid: 'bg-green-500/20 text-green-400',
+  success: 'bg-green-500/20 text-green-400',
+  failed: 'bg-red-500/20 text-red-400',
+  refunded: 'bg-purple-500/20 text-purple-400',
+};
+
+const paymentStatusIcons = {
+  pending: '⏳',
+  paid: '✅',
+  success: '✅',
+  failed: '❌',
+  refunded: '↩️',
 };
 
 const timelineIcons = { placed: '📦', shipped: '🚚', delivered: '✅', cancelled: '❌', returned: '🔄', return_requested: '📋' };
@@ -42,18 +59,64 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
   );
 }
 
+// Payment success popup
+function PaymentSuccessPopup({ open, orderId, onClose }) {
+  useEffect(() => {
+    if (open) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+  if (!open) return null;
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
+      <div style={{ background: 'rgba(26,26,46,0.98)', border: '1px solid rgba(108,99,255,0.3)', borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '400px', margin: '0 16px', textAlign: 'center', position: 'relative' }} className="animate-slideIn">
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
+        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #6C63FF, #00D9A6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+          <HiBadgeCheck style={{ color: '#fff', fontSize: '36px' }} />
+        </div>
+        <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, margin: '0 0 8px' }}>Payment Successful!</h2>
+        <p style={{ color: '#9ca3af', fontSize: '14px', margin: '0 0 8px' }}>Your order has been confirmed.</p>
+        {orderId && <p style={{ color: '#6C63FF', fontSize: '13px', fontWeight: 600, margin: '0 0 24px' }}>Order #{orderId.slice(-8).toUpperCase()}</p>}
+        <button onClick={onClose} className="btn-accent" style={{ padding: '12px 0', width: '100%', fontWeight: 600 }}>View Orders</button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [returnReason, setReturnReason] = useState('');
   const [returnItemsForm, setReturnItemsForm] = useState([]);
   const [returningId, setReturningId] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancelModal, setCancelModal] = useState({ open: false, orderId: null });
+  const [retryPaying, setRetryPaying] = useState(null); // orderId being retried
+  const [paySuccessPopup, setPaySuccessPopup] = useState({ open: false, orderId: null });
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const fetchOrders = () => { API.get('/orders').then(res => setOrders(res.data)).catch(console.error).finally(() => setLoading(false)); };
   useEffect(() => { fetchOrders(); }, []);
+
+  // Always fetch fresh data when viewing an order (avoids stale list snapshot)
+  const handleViewDetails = async (id) => {
+    setDetailLoading(true);
+    setSelectedOrder(null); // clear previous
+    try {
+      const res = await API.get(`/orders/${id}`);
+      setSelectedOrder(res.data);
+    } catch {
+      toast.error('Failed to load order details');
+      // Fallback to list data
+      const fallback = orders.find(o => o._id === id);
+      if (fallback) setSelectedOrder(fallback);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const handleCancel = async () => {
     const id = cancelModal.orderId;
@@ -108,6 +171,7 @@ export default function Orders() {
   };
 
   const canCancel = o => o.orderStatus === 'placed';
+  const canRetryPayment = o => o.paymentStatus === 'pending' && o.paymentMethod === 'online' && o.orderStatus === 'placed';
   const canReturn = o => {
     if (o.orderStatus !== 'delivered' || o.returnRequest?.status === 'pending') return false;
     const hasUnreturnedItems = o.items.some(i => i.quantity > (i.returnedQuantity || 0));
@@ -115,6 +179,64 @@ export default function Orders() {
     return Math.ceil((Date.now() - new Date(o.createdAt)) / 86400000) <= 7;
   };
   const orderHasRefunds = o => o.refund?.status && o.refund.status !== 'none';
+
+  const handleRetryPayment = async (order) => {
+    setRetryPaying(order._id);
+    try {
+      const { data } = await API.post(`/payment/retry-order/${order._id}`);
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: 'INR',
+        name: 'InstaShop',
+        description: 'Complete Payment',
+        order_id: data.orderId,
+        handler: async (response) => {
+          try {
+            await API.post('/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              dbOrderId: data.dbOrderId
+            });
+            // Refresh orders list
+            fetchOrders();
+            // Re-fetch the specific order to update detail view with latest data
+            try {
+              const freshRes = await API.get(`/orders/${data.dbOrderId}`);
+              setSelectedOrder(freshRes.data);
+            } catch { /* detail update failed, list will still refresh */ }
+            setPaySuccessPopup({ open: true, orderId: String(data.dbOrderId) });
+          } catch {
+            toast.error('Payment verified by Razorpay but update failed. Contact support.', { duration: 6000 });
+            fetchOrders();
+          } finally {
+            setRetryPaying(null);
+          }
+        },
+        modal: { ondismiss: () => { toast('Payment cancelled.', { icon: '⏳' }); setRetryPaying(null); } },
+        prefill: { name: user?.name, email: user?.email },
+        theme: { color: '#6C63FF' }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', async (response) => {
+        toast.error(`Payment failed: ${response.error.description}`, { duration: 5000 });
+        setRetryPaying(null);
+        try {
+          await API.post('/payment/failed', {
+            dbOrderId: data.dbOrderId,
+            errorDescription: response.error.description,
+            errorCode: response.error.code
+          });
+          fetchOrders();
+        } catch { /* silent */ }
+      });
+      rzp.open();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to open payment');
+      setRetryPaying(null);
+    }
+  };
 
   // Skeleton loader
   if (loading) return (
@@ -130,11 +252,38 @@ export default function Orders() {
     </div>
   );
 
+  // Detail loading skeleton
+  if (detailLoading) return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="h-4 w-32 bg-white/10 rounded mb-6 animate-pulse" />
+      <div className="glass rounded-xl p-6 mb-6 animate-pulse">
+        <div className="h-6 w-48 bg-white/10 rounded mb-4" />
+        <div className="space-y-3">
+          <div className="h-16 bg-white/5 rounded-xl" />
+          <div className="h-16 bg-white/5 rounded-xl" />
+        </div>
+      </div>
+      <div className="glass rounded-xl p-6 animate-pulse">
+        <div className="h-5 w-32 bg-white/10 rounded mb-4" />
+        <div className="h-24 bg-white/5 rounded-xl" />
+      </div>
+    </div>
+  );
+
   // Detail view
   if (selectedOrder) {
     const o = selectedOrder;
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
+        <PaymentSuccessPopup
+          open={paySuccessPopup.open}
+          orderId={paySuccessPopup.orderId}
+          onClose={() => {
+            setPaySuccessPopup({ open: false, orderId: null });
+            setSelectedOrder(null);
+            fetchOrders();
+          }}
+        />
         <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 bg-transparent border-none cursor-pointer text-sm"><HiArrowLeft /> Back to Orders</button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
@@ -144,6 +293,7 @@ export default function Orders() {
           <div className="flex items-center gap-2">
             <span className={`badge ${statusColors[o.orderStatus]}`}>{o.orderStatus}</span>
             <button onClick={() => downloadInvoice(o._id)} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1"><HiDownload /> Invoice</button>
+            {canCancel(o) && <button onClick={() => setCancelModal({ open: true, orderId: o._id })} className="btn-danger text-sm py-2 px-3 flex items-center gap-1"><HiX /> Cancel</button>}
           </div>
         </div>
 
@@ -192,6 +342,27 @@ export default function Orders() {
           </div>
         </div>
 
+        {/* Complete Payment banner for pending online orders */}
+        {canRetryPayment(o) && (
+          <div className="glass rounded-xl p-5 mb-6 animate-fadeIn" style={{ borderColor: 'rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.05)' }}>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-yellow-400 font-semibold flex items-center gap-2">⏳ Payment Pending</p>
+                <p className="text-gray-400 text-sm mt-1">Your order is saved but payment was not completed.</p>
+              </div>
+              <button
+                onClick={() => handleRetryPayment(o)}
+                disabled={retryPaying === o._id}
+                className="btn-accent flex items-center gap-2 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #6C63FF, #00D9A6)' }}
+              >
+                <HiCreditCard />
+                {retryPaying === o._id ? 'Opening...' : `Complete Payment — ₹${o.totalAmount?.toLocaleString()}`}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Summary + Address */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="glass rounded-xl p-5">
@@ -209,7 +380,18 @@ export default function Orders() {
                 <div className="flex justify-between text-gray-400"><span>Online Handling</span><span>₹0</span></div>
               )}
               <div className="border-t border-white/10 pt-2 flex justify-between text-white font-bold text-lg"><span>Total</span><span>₹{o.totalAmount?.toLocaleString()}</span></div>
-              <div className="flex justify-between text-gray-400 text-xs"><span>Payment Status</span><span className={o.paymentStatus === 'paid' ? 'text-success' : o.paymentStatus === 'refunded' ? 'text-warning' : 'text-gray-400'}>{o.paymentMethod?.toUpperCase()} ({o.paymentStatus})</span></div>
+              <div className="flex justify-between text-gray-400 text-xs">
+                <span>Payment Status</span>
+                <span className={`font-semibold flex items-center gap-1 ${
+                  o.paymentStatus === 'paid' ? 'text-green-400' :
+                  o.paymentStatus === 'failed' ? 'text-red-400' :
+                  o.paymentStatus === 'refunded' ? 'text-purple-400' :
+                  'text-yellow-400'
+                }`}>
+                  {paymentStatusIcons[o.paymentStatus] || '💳'}
+                  {o.paymentMethod?.toUpperCase()} — {o.paymentStatus === 'paid' ? 'Paid' : o.paymentStatus === 'failed' ? 'Payment Failed' : o.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending'}
+                </span>
+              </div>
             </div>
           </div>
           {o.shippingAddress && (
@@ -318,6 +500,7 @@ export default function Orders() {
   // Orders list
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
+      <PaymentSuccessPopup open={paySuccessPopup.open} orderId={paySuccessPopup.orderId} onClose={() => { setPaySuccessPopup({ open: false, orderId: null }); }} />
       <ConfirmModal open={cancelModal.open} title="Cancel Order" message="Are you sure you want to cancel this order? This action cannot be undone." onConfirm={handleCancel} onCancel={() => setCancelModal({ open: false, orderId: null })} />
       <h1 className="text-3xl font-bold text-white mb-8 flex items-center gap-2"><HiClipboardList className="text-primary" /> My Orders</h1>
 
@@ -338,6 +521,10 @@ export default function Orders() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`badge ${statusColors[o.orderStatus] || 'bg-gray-500/20 text-gray-400'}`}>{o.orderStatus}</span>
                   <span className="badge bg-white/5 text-white">₹{o.totalAmount?.toLocaleString()}</span>
+                  {/* Payment status badge */}
+                  <span className={`badge text-xs ${paymentStatusColors[o.paymentStatus] || 'bg-gray-500/20 text-gray-400'}`}>
+                    {paymentStatusIcons[o.paymentStatus] || '💳'} {o.paymentStatus === 'paid' ? 'Paid' : o.paymentStatus === 'failed' ? 'Payment Failed' : o.paymentStatus === 'refunded' ? 'Refunded' : 'Payment Pending'}
+                  </span>
                   {o.refund?.status && o.refund.status !== 'none' && (
                     <span className="badge bg-amber-500/20 text-amber-400 text-xs">Refund: {o.refund.status}</span>
                   )}
@@ -363,8 +550,18 @@ export default function Orders() {
               )}
 
               <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => setSelectedOrder(o)} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1"><HiEye /> View Details</button>
+                <button onClick={() => handleViewDetails(o._id)} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1"><HiEye /> View Details</button>
                 <button onClick={() => downloadInvoice(o._id)} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1"><HiDownload /> Invoice</button>
+                {canRetryPayment(o) && (
+                  <button
+                    onClick={() => handleRetryPayment(o)}
+                    disabled={retryPaying === o._id}
+                    className="btn-accent text-sm py-2 px-3 flex items-center gap-2 disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #6C63FF, #00D9A6)' }}
+                  >
+                    <HiCreditCard /> {retryPaying === o._id ? 'Opening...' : 'Complete Payment'}
+                  </button>
+                )}
                 {canCancel(o) && <button onClick={() => setCancelModal({ open: true, orderId: o._id })} className="btn-danger text-sm py-1.5 px-3 flex items-center gap-1"><HiX /> Cancel</button>}
                 {canReturn(o) && <button onClick={() => startReturn(o)} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1"><HiRefresh /> Return</button>}
                 {o.orderStatus === 'shipped' && <span className="text-gray-500 text-xs italic">Cannot cancel — shipped</span>}

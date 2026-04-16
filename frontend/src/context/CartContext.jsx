@@ -126,7 +126,9 @@ export function CartProvider({ children }) {
       setCart({ items: [] });
       return;
     }
-    await API.delete('/cart');
+    try {
+      await API.delete('/cart');
+    } catch { /* Cart may already be cleared by backend — ignore */ }
     setCart({ items: [] });
   };
 

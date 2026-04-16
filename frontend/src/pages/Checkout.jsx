@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { HiLocationMarker, HiCreditCard, HiPlus, HiHome, HiOfficeBuilding, HiDotsCircleHorizontal, HiCheck, HiX, HiPhone, HiBadgeCheck } from 'react-icons/hi';
@@ -50,6 +50,8 @@ export default function Checkout() {
   const [saveAddress, setSaveAddress] = useState(true);
   const [congrats, setCongrats] = useState({ open: false, orderId: null });
   const [orderPlaced, setOrderPlaced] = useState(false);
+  // Ref to track order placed synchronously (avoids React async state batching race with clearCart)
+  const orderPlacedRef = useRef(false);
   const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
   const COD_FEE = 25;
 
@@ -80,12 +82,23 @@ export default function Checkout() {
     }).catch(console.error);
   }, []);
 
+  // On mount: if a pendingOrderId exists in sessionStorage, the user refreshed mid-payment
+  // The order is already saved in DB — send them to Orders page to complete/view it
+  useEffect(() => {
+    const pendingId = sessionStorage.getItem('pendingCheckoutOrderId');
+    if (pendingId) {
+      sessionStorage.removeItem('pendingCheckoutOrderId');
+      toast('Your order was saved. Complete payment from My Orders.', { icon: '⏳', duration: 4000 });
+      navigate('/orders');
+    }
+  }, []);
+
   // Redirect if no items and order hasn't been placed
   useEffect(() => {
-    if (checkoutItems.length === 0 && !orderPlaced && !congrats.open) {
+    if (checkoutItems.length === 0 && !orderPlacedRef.current && !congrats.open) {
       navigate('/cart');
     }
-  }, [checkoutItems.length, orderPlaced, congrats.open, navigate]);
+  }, [checkoutItems.length, congrats.open, navigate]);
 
   const handleSaveNewAddress = async () => {
     if (!newAddress.street || !newAddress.city || !newAddress.state || !newAddress.zipCode) { toast.error('Please fill all address fields'); return null; }
@@ -123,12 +136,16 @@ export default function Checkout() {
         shippingAddress: address,
         ...paymentData
       });
+      // Mark order as placed synchronously via ref BEFORE clearing cart
+      // to prevent the redirect useEffect from firing during clearCart
+      orderPlacedRef.current = true;
       setOrderPlaced(true);
-      // Clear cart only if not Buy Now
+      // Show congrats popup first
+      setCongrats({ open: true, orderId: res.data._id });
+      // Then clear cart (won't trigger redirect because orderPlacedRef is already true)
       if (!isBuyNow) await clearCart();
       // Clear buyNow item
       sessionStorage.removeItem('buyNowItem');
-      setCongrats({ open: true, orderId: res.data._id });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Order failed');
     }
@@ -140,7 +157,18 @@ export default function Checkout() {
 
     setPaying(true);
     try {
-      const { data } = await API.post('/payment/create-order', { amount: checkoutTotal });
+      const orderItems = checkoutItems.map(i => ({ product: i.product._id, quantity: i.quantity }));
+
+      // Step 1: Create Razorpay order AND a pending DB order (order is saved before payment popup)
+      const { data } = await API.post('/payment/create-order', {
+        amount: checkoutTotal,
+        items: orderItems,
+        shippingAddress: address
+      });
+
+      // Save pendingOrderId so if user refreshes, they get redirected to Orders page
+      sessionStorage.setItem('pendingCheckoutOrderId', data.dbOrderId);
+
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -149,34 +177,68 @@ export default function Checkout() {
         description: 'Order Payment',
         order_id: data.orderId,
         handler: async (response) => {
+          let verified = false;
           try {
+            // Step 2: Verify payment and update the existing order to 'paid'
             await API.post('/payment/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_signature: response.razorpay_signature,
+              dbOrderId: data.dbOrderId
             });
-            await placeOrder({
-              paymentId: response.razorpay_payment_id,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpaySignature: response.razorpay_signature,
-              paymentMethod: 'online',
-              codFee: 0
-            });
+            verified = true;
           } catch (err) {
-            toast.error('Payment verification failed. Please contact support.');
+            // Verify failed — order is saved as 'pending', user can retry from Orders page
+            toast.error('Payment done but verification pending. Check My Orders to complete.', { duration: 7000 });
+            navigate('/orders');
           } finally {
             setPaying(false);
           }
+
+          if (verified) {
+            // Order successfully verified and marked 'paid' — show success UI
+            sessionStorage.removeItem('pendingCheckoutOrderId');
+            sessionStorage.removeItem('buyNowItem');
+            // Clear frontend cart state (backend already deleted cart in create-order)
+            if (!isBuyNow) await clearCart();
+            orderPlacedRef.current = true;
+            setOrderPlaced(true);
+            setCongrats({ open: true, orderId: data.dbOrderId });
+          }
         },
-        modal: { ondismiss: () => { toast.error('Payment was cancelled'); setPaying(false); } },
+        modal: {
+          ondismiss: () => {
+            // User closed Razorpay popup without paying — order stays as 'pending'
+            toast('Payment cancelled. Your order is saved as pending.', { icon: '⏳', duration: 4000 });
+            setPaying(false);
+            // Show congrats with pending status and redirect to orders
+            orderPlacedRef.current = true;
+            setOrderPlaced(true);
+            sessionStorage.removeItem('pendingCheckoutOrderId');
+            if (!isBuyNow) clearCart();
+            sessionStorage.removeItem('buyNowItem');
+            navigate('/orders');
+          }
+        },
         prefill: { name: user?.name, email: user?.email, contact: address.phone || user?.phone },
         theme: { color: '#6C63FF' }
       };
       const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', (response) => { toast.error(`Payment failed: ${response.error.description}`); setPaying(false); });
+      rzp.on('payment.failed', async (response) => {
+        toast.error(`Payment failed: ${response.error.description}. Your order has been cancelled.`, { duration: 5000 });
+        setPaying(false);
+        // Mark the pending order as failed on backend (restores stock)
+        try {
+          await API.post('/payment/failed', {
+            dbOrderId: data.dbOrderId,
+            errorDescription: response.error.description,
+            errorCode: response.error.code
+          });
+        } catch { /* silent */ }
+      });
       rzp.open();
     } catch (err) {
-      toast.error('Failed to create payment order');
+      toast.error(err.response?.data?.message || 'Failed to create payment order');
       setPaying(false);
     }
   };
