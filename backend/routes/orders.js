@@ -219,7 +219,7 @@ router.get('/:id/invoice', auth, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=invoice_${order._id.toString().slice(-8)}.pdf`);
     doc.pipe(res);
 
-    doc.fontSize(24).font('Helvetica-Bold').fillColor('#6C63FF').text('InstaShop', 50, 40);
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#6C63FF').text('Dudez_Shop', 50, 40);
     doc.fontSize(10).font('Helvetica').fillColor('#666').text('Premium Shopping', 50, 68);
     doc.fontSize(20).font('Helvetica-Bold').fillColor('#333').text('INVOICE', 400, 40, { align: 'right' });
     doc.fontSize(10).font('Helvetica').fillColor('#666').text(`#${order._id.toString().slice(-8).toUpperCase()}`, 400, 65, { align: 'right' });
@@ -292,7 +292,7 @@ router.get('/:id/invoice', auth, async (req, res) => {
     y += 50;
     doc.moveTo(50, y).lineTo(550, y).strokeColor('#eee').stroke();
     y += 12;
-    doc.fontSize(9).font('Helvetica').fillColor('#999').text('Thank you for shopping with InstaShop!', 50, y, { align: 'center', width: 500 });
+    doc.fontSize(9).font('Helvetica').fillColor('#999').text('Thank you for shopping with Dudez_Shop!', 50, y, { align: 'center', width: 500 });
     const displayPaymentStatus = (order.paymentMethod === 'cod' && order.orderStatus === 'delivered') ? 'paid' : order.paymentStatus;
     doc.text(`Payment: ${order.paymentMethod?.toUpperCase()} (${displayPaymentStatus}) | Status: ${order.orderStatus}`, 50, y + 14, { align: 'center', width: 500 });
 

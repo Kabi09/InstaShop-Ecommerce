@@ -73,13 +73,13 @@ router.post('/forgot-password', [
     // Send email
     const emailSent = await sendEmail({
       to: user.email,
-      subject: 'InstaShop - Reset Your Password',
+      subject: 'Dudez_Shop - Reset Your Password',
       text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`,
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
           <div style="background-color: #6366f1; padding: 40px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">🔐 Reset Your Password</h1>
-            <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">We received a request to access your InstaShop account.</p>
+            <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">We received a request to access your Dudez_Shop account.</p>
           </div>
           <div style="padding: 40px; background-color: #ffffff;">
             <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.5;">Hello,</p>
@@ -92,12 +92,12 @@ router.post('/forgot-password', [
             <p style="margin: 0 0 25px 0; font-size: 14px; color: #6b7280; line-height: 1.6;">If you did not request this password reset, please ignore this email or contact support if you have concerns.</p>
             
             <div style="border-top: 1px solid #e5e7eb; padding-top: 25px; margin-top: 25px; text-align: center;">
-              <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team InstaShop</p>
+              <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team Dudez_Shop</p>
               <p style="margin: 5px 0 0 0; font-size: 14px; color: #9ca3af;">Premium Shopping Experience</p>
             </div>
           </div>
           <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-            <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 InstaShop. All rights reserved.</p>
+            <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 Dudez_Shop. All rights reserved.</p>
           </div>
         </div>
       `

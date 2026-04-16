@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
         <section><h2 className="text-xl font-semibold text-white mb-3">Data Security</h2><p>We implement industry-standard security measures including encryption (SSL/TLS), secure password hashing (bcrypt), and JWT-based authentication to protect your data. Payment processing is handled securely through Razorpay.</p></section>
         <section><h2 className="text-xl font-semibold text-white mb-3">Cookies</h2><p>We use essential cookies and local storage for authentication tokens. We do not use tracking cookies or share data with advertising networks.</p></section>
         <section><h2 className="text-xl font-semibold text-white mb-3">Your Rights</h2><p>You have the right to access, update, or delete your personal information at any time through your profile settings. You may also contact us to request a complete data export or deletion.</p></section>
-        <section><h2 className="text-xl font-semibold text-white mb-3">Contact</h2><p>For privacy-related inquiries, contact us at privacy@instashop.com.</p></section>
+        <section><h2 className="text-xl font-semibold text-white mb-3">Contact</h2><p>For privacy-related inquiries, contact us at privacy@dudez_shop.com.</p></section>
         <p className="text-gray-500 text-xs pt-4 border-t border-white/10">Last updated: March 2026</p>
       </div>
     </div>

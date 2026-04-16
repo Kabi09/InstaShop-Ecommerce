@@ -173,11 +173,9 @@ export default function Checkout() {
         key: data.keyId,
         amount: data.amount,
         currency: 'INR',
-        name: 'InstaShop',
+        name: 'Dudez_Shop',
         description: 'Order Payment',
         order_id: data.orderId,
-        callback_url: `${API.defaults.baseURL.replace('/api', '')}/api/payment/verify-redirect`,
-        redirect: true,
         handler: async (response) => {
           let verified = false;
           try {

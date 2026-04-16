@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const sendEmail = async ({ to, subject, text, html, fromName = 'InstaShop' }) => {
+const sendEmail = async ({ to, subject, text, html, fromName = 'Dudez_Shop' }) => {
   try {
     const emailUser = process.env.EMAIL || process.env.SMTP_EMAIL;
     const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
@@ -18,7 +18,7 @@ const sendEmail = async ({ to, subject, text, html, fromName = 'InstaShop' }) =>
       });
 
       const mailOptions = {
-        from: `"InstaShop" <${emailUser}>`,
+        from: `"Dudez_Shop" <${emailUser}>`,
         to,
         subject,
         text,

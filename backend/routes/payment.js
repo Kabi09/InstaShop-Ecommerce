@@ -200,56 +200,6 @@ router.post('/retry-order/:id', auth, async (req, res) => {
   }
 });
 
-// Form-encoded redirect handler for Mobile UPI/Browser tab crash scenarios
-router.post('/verify-redirect', express.urlencoded({ extended: true }), async (req, res) => {
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const frontendUrl = process.env.FRONTEND_URL || 'https://dudez.in';
-
-    const sign = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(sign)
-      .digest('hex');
-
-    if (expectedSign !== razorpay_signature) {
-      return res.redirect(`${frontendUrl}/orders?error=invalid_signature`);
-    }
-
-    const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-    if (!order) {
-      return res.redirect(`${frontendUrl}/orders?error=order_not_found`);
-    }
-
-    if (order.paymentStatus === 'pending') {
-      order.paymentId = razorpay_payment_id;
-      order.razorpaySignature = razorpay_signature;
-      order.paymentStatus = 'paid';
-      order.statusHistory.push({ status: 'paid', note: 'Payment received via redirect' });
-      await order.save();
-
-      // Clear cart
-      await Cart.findOneAndDelete({ user: order.user });
-
-      // Send email
-      try {
-        const user = await User.findById(order.user);
-        if (user?.email) {
-          sendOrderEmail(user.email, `Order Confirmed — #${order._id.toString().slice(-8).toUpperCase()}`, order, 'placed');
-        }
-      } catch (emailErr) {
-        console.error('Redirect email error:', emailErr.message);
-      }
-    }
-
-    return res.redirect(`${frontendUrl}/orders?payment_success=true`);
-  } catch (error) {
-    console.error('Redirect verify error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'https://dudez.in';
-    return res.redirect(`${frontendUrl}/orders?error=server_error`);
-  }
-});
-
 // Webhook to handle Razorpay server-to-server events
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {

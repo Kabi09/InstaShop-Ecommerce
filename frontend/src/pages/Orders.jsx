@@ -188,11 +188,9 @@ export default function Orders() {
         key: data.keyId,
         amount: data.amount,
         currency: 'INR',
-        name: 'InstaShop',
+        name: 'Dudez_Shop',
         description: 'Complete Payment',
         order_id: data.orderId,
-        callback_url: `${API.defaults.baseURL.replace('/api', '')}/api/payment/verify-redirect`,
-        redirect: true,
         handler: async (response) => {
           try {
             await API.post('/payment/verify', {

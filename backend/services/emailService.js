@@ -70,13 +70,13 @@ const sendOrderEmail = async (to, subject, order, type = 'placed') => {
         </div>
 
         <div style="border-top: 1px solid #f3f4f6; padding-top: 30px; margin-top: 40px; text-align: center;">
-          <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team InstaShop</p>
+          <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team Dudez_Shop</p>
           <p style="margin: 5px 0 0 0; font-size: 14px; color: #9ca3af;">Premium Shopping Experience</p>
         </div>
       </div>
       
       <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-        <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 InstaShop. All rights reserved.</p>
+        <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 Dudez_Shop. All rights reserved.</p>
       </div>
     </div>
   `;

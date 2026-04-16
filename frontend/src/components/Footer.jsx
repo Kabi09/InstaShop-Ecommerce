@@ -11,7 +11,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white" style={{ background: 'linear-gradient(135deg, #6C63FF, #FF6584)' }}>I</div>
-              <span className="text-xl font-bold gradient-text">InstaShop</span>
+              <span className="text-xl font-bold gradient-text">Dudez_Shop</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">Your premium destination for quality products. Shop the latest trends with confidence and style.</p>
             <div className="flex gap-3">
@@ -55,7 +55,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/5 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} InstaShop. All rights reserved.</p>
+          <p className="text-gray-500 text-sm">&copy; {new Date().getFullYear()} Dudez_Shop. All rights reserved.</p>
           <div className="flex gap-4">
             <span className="text-gray-500 text-xs">Secure Payments</span>
             <span className="text-gray-500 text-xs">|</span>

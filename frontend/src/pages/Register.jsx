@@ -37,7 +37,7 @@ export default function Register() {
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl font-black text-white" style={{ background: 'linear-gradient(135deg, #6C63FF, #FF6584)' }}>I</div>
           <h1 className="text-2xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-gray-400 text-sm">Join InstaShop today</p>
+          <p className="text-gray-400 text-sm">Join Dudez_Shop today</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

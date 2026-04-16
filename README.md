@@ -1,11 +1,11 @@
-# 🛍️ InstaShop — Premium E-commerce Ecosystem
+# 🛍️ Dudez_Shop — Premium E-commerce Ecosystem
 
 [![Vercel Deployment](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel&style=for-the-badge)](https://vercel.com)
 [![React 19](https://img.shields.io/badge/React-19.0-blue?logo=react&style=for-the-badge)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js&style=for-the-badge)](https://nodejs.org)
 [![Tailwind 4](https://img.shields.io/badge/Tailwind-4.x-38B2AC?logo=tailwind-css&style=for-the-badge)](https://tailwindcss.com)
 
-**InstaShop** is a high-performance, full-stack e-commerce solution engineered for a premium shopping experience. Built with a modern monolithic architecture, it bridges a blazing-fast React frontend with a robust Node.js API.
+**Dudez_Shop** is a high-performance, full-stack e-commerce solution engineered for a premium shopping experience. Built with a modern monolithic architecture, it bridges a blazing-fast React frontend with a robust Node.js API.
 
 ---
 
@@ -66,7 +66,7 @@ For the most reliable performance, we recommend deploying the `frontend` and `ba
 
 1. **Clone the Repo**:
    ```bash
-   git clone https://github.com/Kabi09/InstaShop-Ecommerce.git
+   git clone https://github.com/Kabi09/Dudez_Shop-Ecommerce.git
    ```
 
 2. **Frontend Setup**:

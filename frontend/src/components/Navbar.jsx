@@ -37,7 +37,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 gap-3">
             <Link to="/admin" className="flex items-center gap-2 no-underline flex-shrink-0">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white" style={{ background: 'linear-gradient(135deg, #6C63FF, #FF6584)' }}>I</div>
-              <span className="text-xl font-bold gradient-text hidden sm:block">InstaShop</span>
+              <span className="text-xl font-bold gradient-text hidden sm:block">Dudez_Shop</span>
               <span className="badge bg-purple-500/20 text-purple-400 text-xs ml-2">Admin</span>
             </Link>
             <div className="flex items-center gap-4">
@@ -71,7 +71,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 no-underline flex-shrink-0">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white" style={{ background: 'linear-gradient(135deg, #6C63FF, #FF6584)' }}>I</div>
-            <span className="text-xl font-bold gradient-text hidden sm:block">InstaShop</span>
+            <span className="text-xl font-bold gradient-text hidden sm:block">Dudez_Shop</span>
           </Link>
 
           {/* Search - always visible, responsive */}

@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
-const GUEST_CART_KEY = 'instashop_guest_cart';
+const GUEST_CART_KEY = 'dudez_shop_guest_cart';
 
 const getGuestCart = () => {
   try { return JSON.parse(localStorage.getItem(GUEST_CART_KEY)) || []; }

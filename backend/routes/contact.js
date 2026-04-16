@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
     try {
       await sendEmail({
         to: email,
-        subject: `InstaShop - We received your message: ${subject}`,
+        subject: `Dudez_Shop - We received your message: ${subject}`,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #6366f1; padding: 40px 20px; text-align: center;">
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
             </div>
             <div style="padding: 40px; background-color: #ffffff;">
               <p style="margin: 0 0 20px 0; font-size: 16px; color: #374151; line-height: 1.5;">Hi ${name},</p>
-              <p style="margin: 0 0 25px 0; font-size: 16px; color: #4b5563; line-height: 1.6;">Thank you for contacting InstaShop support. We've successfully received your inquiry regarding <b></b>"${subject}"</b>.</p>
+              <p style="margin: 0 0 25px 0; font-size: 16px; color: #4b5563; line-height: 1.6;">Thank you for contacting Dudez_Shop support. We've successfully received your inquiry regarding <b></b>"${subject}"</b>.</p>
               
               <div style="background-color: #f3f4f6; padding: 25px; border-radius: 8px; border-left: 4px solid #6366f1; margin: 30px 0;">
                 <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">Your Message Preview:</p>
@@ -39,12 +39,12 @@ router.post('/', async (req, res) => {
               <p style="margin: 0 0 25px 0; font-size: 14px; color: #6b7280; line-height: 1.6;">Our team typically responds within 24 hours. In the meantime, feel free to browse our latest collections.</p>
               
               <div style="border-top: 1px solid #f3f4f6; padding-top: 30px; margin-top: 40px; text-align: center;">
-                <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team InstaShop</p>
+                <p style="margin: 0; font-size: 16px; font-weight: 600; color: #374151;">Team Dudez_Shop</p>
                 <p style="margin: 5px 0 0 0; font-size: 14px; color: #9ca3af;">Premium Shopping Experience</p>
               </div>
             </div>
             <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 InstaShop. All rights reserved.</p>
+              <p style="margin: 0; font-size: 12px; color: #9ca3af;">&copy; 2026 Dudez_Shop. All rights reserved.</p>
             </div>
           </div>
         `
@@ -57,8 +57,8 @@ router.post('/', async (req, res) => {
     try {
       await sendEmail({
         to: process.env.EMAIL,
-        subject: `📬 InstaShop Admin: New Message from ${name}`,
-        fromName: 'InstaShop Admin System',
+        subject: `📬 Dudez_Shop Admin: New Message from ${name}`,
+        fromName: 'Dudez_Shop Admin System',
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #d97706; padding: 30px 20px; text-align: center;">
