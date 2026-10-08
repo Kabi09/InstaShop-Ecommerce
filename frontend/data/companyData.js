@@ -15,6 +15,7 @@ export const companyInfo = {
   copyrightYear: 2026,
 };
 
+
 export const navLinks = [
   { label: "Home", href: "#hero" },
   { label: "Services", href: "#services" },
