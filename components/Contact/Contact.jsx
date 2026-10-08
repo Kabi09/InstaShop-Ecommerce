@@ -63,7 +63,12 @@ export default function Contact() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        data = { error: `Server error (${res.status}). Please email contact@dudez.in directly.` };
+      }
 
       if (res.ok && data.success) {
         setSubmitted(true);
@@ -71,7 +76,7 @@ export default function Contact() {
         setServerError(data.error || 'Failed to dispatch email. Please email us directly.');
       }
     } catch (err) {
-      setServerError('Network error. Please try again or reach out to contact@dudez.in directly.');
+      setServerError(err.message || 'Network error. Please try again or reach out to contact@dudez.in directly.');
     } finally {
       setLoading(false);
     }
