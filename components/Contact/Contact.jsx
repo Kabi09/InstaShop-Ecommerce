@@ -17,6 +17,7 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
 
   const validate = () => {
     const errs = {};
@@ -36,9 +37,12 @@ export default function Contact() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+    if (serverError) {
+      setServerError('');
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -47,11 +51,29 @@ export default function Contact() {
     }
 
     setLoading(true);
-    // Realistic simulation of client-side enquiry submission
-    setTimeout(() => {
+    setServerError('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setServerError(data.error || 'Failed to dispatch email. Please email us directly.');
+      }
+    } catch (err) {
+      setServerError('Network error. Please try again or reach out to contact@dudez.in directly.');
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-    }, 600);
+    }
   };
 
   const handleReset = () => {
@@ -65,6 +87,7 @@ export default function Contact() {
     });
     setSubmitted(false);
     setErrors({});
+    setServerError('');
   };
 
   return (
@@ -163,9 +186,9 @@ export default function Contact() {
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
-                <h3 className={styles.successTitle}>Enquiry Received</h3>
+                <h3 className={styles.successTitle}>Enquiry Sent Successfully</h3>
                 <p className={styles.successDesc}>
-                  Thank you, <strong>{formData.name}</strong>. Your project enquiry regarding <strong>{formData.projectType}</strong> has been noted. We will review your requirements and respond at <strong>{formData.email}</strong> shortly.
+                  Thank you, <strong>{formData.name}</strong>. Your enquiry has been received and forwarded to our team. A confirmation receipt has also been dispatched to <strong>{formData.email}</strong>.
                 </p>
                 <button type="button" onClick={handleReset} className={styles.btnReset}>
                   Send Another Message
@@ -173,6 +196,17 @@ export default function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className={styles.contactForm} noValidate>
+                {serverError && (
+                  <div className={styles.serverErrorBox}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>{serverError}</span>
+                  </div>
+                )}
+
                 <div className={styles.formRow}>
                   <div className={styles.formField}>
                     <label htmlFor="name" className={styles.label}>
@@ -281,10 +315,17 @@ export default function Contact() {
 
                 <div className={styles.formSubmitRow}>
                   <button type="submit" disabled={loading} className={styles.submitBtn}>
-                    {loading ? 'Processing...' : 'Send Enquiry'}
+                    {loading ? (
+                      <>
+                        <span className={styles.btnSpinner}></span>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      'Send Enquiry'
+                    )}
                   </button>
                   <span className={styles.privacyNote}>
-                    No spam. We respect your confidentiality.
+                    Automatic receipt sent to your email.
                   </span>
                 </div>
               </form>
