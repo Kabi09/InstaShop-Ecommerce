@@ -4,6 +4,7 @@ import { useState } from 'react';
 import styles from './Contact.module.scss';
 import { companyInfo } from '../../data/companyData';
 
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
