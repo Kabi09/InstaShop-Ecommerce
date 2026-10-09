@@ -6,41 +6,41 @@ import { companyInfo } from '../data/companyData';
 export const metadata = {
   metadataBase: new URL(companyInfo.website),
   title: {
-    default: 'Dudez | Software Development & IT Services',
-    template: '%s | Dudez',
+    default: 'Ameyy Digital Services | Software Development & IT Services',
+    template: '%s | Ameyy Digital Services',
   },
   description:
-    'Dudez is a Chennai-based software development and IT services company building websites, web applications, e-commerce platforms and custom business software.',
+    'Ameyy Digital Services is a Tamil Nadu-based software development and IT services enterprise building websites, web applications, e-commerce platforms and custom business software.',
   keywords: [
+    'Ameyy Digital Services',
     'Software Development Company Chennai',
-    'IT Services Chennai',
+    'IT Services Nagapattinam',
     'Custom Web Application Development',
     'E-Commerce Development India',
     'Business Management Systems',
-    'Dudez',
   ],
-  authors: [{ name: 'Dudez', url: companyInfo.website }],
-  creator: 'Dudez',
-  publisher: 'Dudez',
+  authors: [{ name: 'Ameyy Digital Services', url: companyInfo.website }],
+  creator: 'Ameyy Digital Services',
+  publisher: 'Ameyy Digital Services',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   openGraph: {
-    title: 'Dudez | Software Development & IT Services',
+    title: 'Ameyy Digital Services | Software Development & IT Services',
     description:
-      'Dudez is a Chennai-based software development and IT services company building websites, web applications, e-commerce platforms and custom business software.',
+      'Ameyy Digital Services is a Tamil Nadu-based software development and IT services enterprise building websites, web applications, e-commerce platforms and custom business software.',
     url: companyInfo.website,
-    siteName: 'Dudez',
+    siteName: 'Ameyy Digital Services',
     locale: 'en_IN',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dudez | Software Development & IT Services',
+    title: 'Ameyy Digital Services | Software Development & IT Services',
     description:
-      'Dudez is a Chennai-based software development and IT services company building websites, web applications, e-commerce platforms and custom business software.',
+      'Ameyy Digital Services is a Tamil Nadu-based software development and IT services enterprise building websites, web applications, e-commerce platforms and custom business software.',
   },
   robots: {
     index: true,

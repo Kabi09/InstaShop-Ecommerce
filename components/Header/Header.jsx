@@ -30,7 +30,7 @@ export default function Header() {
               <polyline points="8 6 2 12 8 18" />
             </svg>
           </span>
-          <span className={styles.logoText}>Dudez</span>
+          <span className={styles.logoText}>{companyInfo.name}</span>
         </Link>
 
         {/* Desktop Nav */}

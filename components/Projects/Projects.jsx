@@ -62,7 +62,7 @@ export default function Projects() {
                     <div className={styles.windowDots}>
                       <span></span><span></span><span></span>
                     </div>
-                    <span className={styles.screenAddress}>app.dudez.in/demo/{project.id}</span>
+                    <span className={styles.screenAddress}>app.ameyy.in/demo/{project.id}</span>
                   </div>
 
                   <div className={styles.screenContent}>

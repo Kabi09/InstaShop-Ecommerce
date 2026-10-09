@@ -67,7 +67,7 @@ export default function Contact() {
       try {
         data = await res.json();
       } catch (jsonErr) {
-        data = { error: `Server error (${res.status}). Please email contact@dudez.in directly.` };
+        data = { error: `Server error (${res.status}). Please email ${companyInfo.email} directly.` };
       }
 
       if (res.ok && data.success) {
@@ -76,7 +76,7 @@ export default function Contact() {
         setServerError(data.error || 'Failed to dispatch email. Please email us directly.');
       }
     } catch (err) {
-      setServerError(err.message || 'Network error. Please try again or reach out to contact@dudez.in directly.');
+      setServerError(err.message || `Network error. Please try again or reach out to ${companyInfo.email} directly.`);
     } finally {
       setLoading(false);
     }
@@ -111,9 +111,9 @@ export default function Contact() {
           {/* Left Column: Direct Info */}
           <div className={styles.directDetails}>
             <div className={styles.detailBlock}>
-              <h3 className={styles.blockTitle}>Direct Contact Channels</h3>
+              <h3 className={styles.blockTitle}>Direct Contact &amp; Locations</h3>
               <p className={styles.blockSub}>
-                Prefer direct communication? Reach out to us via email or call directly.
+                Reach out to us directly via email, phone, or visit our office locations.
               </p>
 
               <div className={styles.channelsList}>
@@ -125,24 +125,9 @@ export default function Contact() {
                     </svg>
                   </div>
                   <div>
-                    <span className={styles.channelLabel}>Primary Enquiries</span>
+                    <span className={styles.channelLabel}>Support &amp; Enquiries</span>
                     <a href={`mailto:${companyInfo.email}`} className={styles.channelValue}>
                       {companyInfo.email}
-                    </a>
-                  </div>
-                </div>
-
-                <div className={styles.channelItem}>
-                  <div className={styles.channelIcon}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                  <div>
-                    <span className={styles.channelLabel}>Founder Email</span>
-                    <a href={`mailto:${companyInfo.founderEmail}`} className={styles.channelValue}>
-                      {companyInfo.founderEmail}
                     </a>
                   </div>
                 </div>
@@ -169,8 +154,21 @@ export default function Contact() {
                     </svg>
                   </div>
                   <div>
-                    <span className={styles.channelLabel}>Office Location</span>
-                    <p className={styles.channelLocation}>{companyInfo.location}</p>
+                    <span className={styles.channelLabel}>{companyInfo.unit1.title}</span>
+                    <p className={styles.channelLocation}>{companyInfo.unit1.address}</p>
+                  </div>
+                </div>
+
+                <div className={styles.channelItem}>
+                  <div className={styles.channelIcon}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                  </div>
+                  <div>
+                    <span className={styles.channelLabel}>{companyInfo.unit2.title}</span>
+                    <p className={styles.channelLocation}>{companyInfo.unit2.address}</p>
                   </div>
                 </div>
               </div>

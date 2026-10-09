@@ -16,7 +16,7 @@ export default function Footer() {
                   <polyline points="8 6 2 12 8 18" />
                 </svg>
               </span>
-              <span className={styles.brandName}>Dudez</span>
+              <span className={styles.brandName}>{companyInfo.name}</span>
             </div>
 
             <p className={styles.brandTagline}>
@@ -24,7 +24,7 @@ export default function Footer() {
             </p>
 
             <p className={styles.brandBio}>
-              Chennai-based technology firm building dependable websites, web applications, and custom business solutions.
+              Tamil Nadu-based technology enterprise building dependable websites, web applications, and custom business solutions.
             </p>
           </div>
 
@@ -57,23 +57,27 @@ export default function Footer() {
 
           {/* Contact Details */}
           <div className={styles.contactCol}>
-            <h4 className={styles.colHeading}>Contact</h4>
+            <h4 className={styles.colHeading}>Contact &amp; Offices</h4>
             <div className={styles.contactDetails}>
               <p>
                 <span>Enquiries:</span>
                 <a href={`mailto:${companyInfo.email}`}>{companyInfo.email}</a>
               </p>
               <p>
-                <span>Founder:</span>
-                <a href={`mailto:${companyInfo.founderEmail}`}>{companyInfo.founderEmail}</a>
-              </p>
-              <p>
                 <span>Phone:</span>
                 <a href={companyInfo.phoneHref}>{companyInfo.phone}</a>
               </p>
               <p>
-                <span>Location:</span>
-                {companyInfo.location}
+                <span>Chennai Unit:</span>
+                {companyInfo.unit1.shortAddress}
+              </p>
+              <p>
+                <span>Registered Unit:</span>
+                {companyInfo.unit2.shortAddress}
+              </p>
+              <p>
+                <span>UDYAM Reg:</span>
+                {companyInfo.udyamRegistration}
               </p>
             </div>
           </div>
@@ -82,10 +86,10 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className={styles.bottomBar}>
           <p className={styles.copyright}>
-            &copy; {companyInfo.copyrightYear} Dudez. All rights reserved.
+            &copy; {companyInfo.copyrightYear} {companyInfo.name}. All rights reserved.
           </p>
           <div className={styles.bottomLinks}>
-            <span className={styles.locationBadge}>Chennai, Tamil Nadu, India</span>
+            <span className={styles.locationBadge}>Chennai &amp; Nagapattinam, Tamil Nadu, India</span>
           </div>
         </div>
       </div>

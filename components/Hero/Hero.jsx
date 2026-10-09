@@ -11,7 +11,7 @@ export default function Hero() {
           <div className={styles.heroContent}>
             <div className={styles.badgeWrapper}>
               <span className={styles.badge}>Software Development &amp; IT Services</span>
-              <span className={styles.locationTag}>Chennai, India</span>
+              <span className={styles.locationTag}>Chennai &amp; Nagapattinam, India</span>
             </div>
 
             <h1 className={styles.mainHeading}>
@@ -19,7 +19,7 @@ export default function Hero() {
             </h1>
 
             <p className={styles.supportingText}>
-              Dudez is a software development and IT services company based in Chennai, Tamil Nadu.
+              Ameyy Digital Services is a software development and IT services enterprise based in Chennai and Nagapattinam, Tamil Nadu.
               We build reliable websites, web applications and custom software solutions for businesses.
             </p>
 
@@ -53,7 +53,7 @@ export default function Hero() {
                     <line x1="8" y1="21" x2="16" y2="21"></line>
                     <line x1="12" y1="17" x2="12" y2="21"></line>
                   </svg>
-                  <span>dudez-engine / production / architecture.js</span>
+                  <span>ameyy-engine / production / architecture.js</span>
                 </div>
                 <span className={styles.ideBadge}>v2.4.0</span>
               </div>
@@ -106,7 +106,7 @@ export default function Hero() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricLabel}>Location Hub</div>
-                    <div className={styles.metricValue}>Chennai, IN</div>
+                    <div className={styles.metricValue}>Tamil Nadu, IN</div>
                   </div>
                 </div>
               </div>

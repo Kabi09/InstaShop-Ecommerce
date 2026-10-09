@@ -10,10 +10,10 @@ export default function About() {
           {/* Left Column: Narrative */}
           <div className={styles.aboutMain}>
             <span className="section-tag">About Us</span>
-            <h2 className="section-title">About Dudez</h2>
+            <h2 className="section-title">About {companyInfo.name}</h2>
 
             <p className={styles.leadParagraph}>
-              Dudez is a Chennai-based software development and IT services company focused on building practical digital solutions for businesses.
+              {companyInfo.name} is a software development and IT services enterprise based in Chennai and Nagapattinam, Tamil Nadu.
             </p>
 
             <p className={styles.bodyParagraph}>
@@ -36,7 +36,7 @@ export default function About() {
 
           {/* Right Column: Company Info Card */}
           <div className={styles.infoCard}>
-            <h3 className={styles.cardHeaderTitle}>Company Details</h3>
+            <h3 className={styles.cardHeaderTitle}>Official Enterprise Details</h3>
 
             <div className={styles.infoList}>
               <div className={styles.infoItem}>
@@ -47,8 +47,21 @@ export default function About() {
                   </svg>
                 </div>
                 <div>
-                  <span className={styles.infoLabel}>Headquarters</span>
-                  <p className={styles.infoValue}>{companyInfo.location}</p>
+                  <span className={styles.infoLabel}>{companyInfo.unit1.title}</span>
+                  <p className={styles.infoValue}>{companyInfo.unit1.address}</p>
+                </div>
+              </div>
+
+              <div className={styles.infoItem}>
+                <div className={styles.infoIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <span className={styles.infoLabel}>{companyInfo.unit2.title}</span>
+                  <p className={styles.infoValue}>{companyInfo.unit2.address}</p>
                 </div>
               </div>
 
@@ -68,19 +81,6 @@ export default function About() {
               <div className={styles.infoItem}>
                 <div className={styles.infoIcon}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                </div>
-                <div>
-                  <span className={styles.infoLabel}>Founder Direct</span>
-                  <a href={`mailto:${companyInfo.founderEmail}`} className={styles.infoLink}>{companyInfo.founderEmail}</a>
-                </div>
-              </div>
-
-              <div className={styles.infoItem}>
-                <div className={styles.infoIcon}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                   </svg>
                 </div>
@@ -92,8 +92,8 @@ export default function About() {
             </div>
 
             <div className={styles.cardFootnote}>
-              <span>Official Company Domain:</span>
-              <strong>{companyInfo.website.replace('https://', '')}</strong>
+              <span>UDYAM Registration No:</span>
+              <strong>{companyInfo.udyamRegistration}</strong>
             </div>
           </div>
         </div>

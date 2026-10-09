@@ -26,10 +26,10 @@ export async function POST(request) {
       );
     }
 
-    const smtpUser = process.env.SMTP_USER || 'finallykabilan@gmail.com';
-    const smtpPass = process.env.SMTP_PASSWORD || 'dbglrbmigcobgkyb';
+    const smtpUser = process.env.SMTP_USER || 'noreply.ameyy@gmail.com';
+    const smtpPass = process.env.SMTP_PASSWORD || 'deqcjrcouaiietji';
     const smtpFrom = process.env.SMTP_FROM || smtpUser;
-    const adminRecipients = process.env.ADMIN_EMAIL || 'finallykabilan@gmail.com,contact@dudez.in';
+    const adminRecipients = process.env.ADMIN_EMAIL || 'ameyy.support@gmail.com';
 
     // Create Gmail transporter with SSL
     const transporter = nodemailer.createTransport({
@@ -42,15 +42,15 @@ export async function POST(request) {
 
     // 1. Lead notification email sent to admin/team
     const adminMailOptions = {
-      from: `"Dudez Enquiry" <${smtpFrom}>`,
+      from: `"Ameyy Digital Services Enquiry" <${smtpFrom}>`,
       to: adminRecipients,
       replyTo: `"${name}" <${email}>`,
-      subject: `[New Lead] ${name} - ${projectType || 'General Enquiry'} (Dudez)`,
+      subject: `[New Lead] ${name} - ${projectType || 'General Enquiry'} (Ameyy Digital Services)`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
           <div style="border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 20px;">
             <h2 style="color: #0f172a; margin: 0; font-size: 20px;">New Project Enquiry Received</h2>
-            <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Source: https://dudez.in Contact Form</p>
+            <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Source: Ameyy Digital Services Contact Form</p>
           </div>
           
           <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
@@ -94,15 +94,15 @@ export async function POST(request) {
     // 2. Automated Confirmation / Reply Email to the Client
     try {
       const clientReplyOptions = {
-        from: `"Dudez | Software Development" <${smtpFrom}>`,
+        from: `"Ameyy Digital Services | Software Development" <${smtpFrom}>`,
         to: email,
-        replyTo: 'contact@dudez.in',
-        subject: `Thank you for contacting Dudez — We received your project enquiry`,
+        replyTo: 'ameyy.support@gmail.com',
+        subject: `Thank you for contacting Ameyy Digital Services — We received your project enquiry`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
             <div style="border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 20px;">
-              <h2 style="color: #0f172a; margin: 0; font-size: 20px;">Thank You for Reaching Out to Dudez</h2>
-              <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Software Development & IT Services &bull; Chennai, India</p>
+              <h2 style="color: #0f172a; margin: 0; font-size: 20px;">Thank You for Reaching Out to Ameyy Digital Services</h2>
+              <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Software Development &amp; IT Services &bull; Chennai &amp; Nagapattinam, India</p>
             </div>
 
             <p style="color: #334155; font-size: 15px; line-height: 1.6;">
@@ -110,7 +110,7 @@ export async function POST(request) {
             </p>
 
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              Thank you for considering Dudez for your technology requirements. We have successfully received your project enquiry regarding <strong>${projectType || 'Software Development'}</strong>.
+              Thank you for considering Ameyy Digital Services for your technology requirements. We have successfully received your project enquiry regarding <strong>${projectType || 'Software Development'}</strong>.
             </p>
 
             <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0;">
@@ -125,14 +125,14 @@ export async function POST(request) {
             </p>
 
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              If you need immediate assistance or wish to provide additional documentation, you can reply directly to this email or reach us on WhatsApp/Phone at <strong>+91 9363519020</strong>.
+              If you need immediate assistance or wish to provide additional documentation, you can reply directly to this email or reach us on WhatsApp/Phone at <strong>+91 8883280816</strong>.
             </p>
 
             <div style="border-top: 1px solid #e2e8f0; margin-top: 28px; padding-top: 18px; font-size: 13px; color: #64748b;">
-              <p style="margin: 0 0 4px 0; font-weight: 600; color: #0f172a;">Dudez</p>
-              <p style="margin: 0 0 4px 0;">Software Development & IT Services</p>
-              <p style="margin: 0 0 4px 0;">Chennai, Tamil Nadu, India</p>
-              <p style="margin: 0 0 4px 0;">Website: <a href="https://dudez.in" style="color: #2563eb;">https://dudez.in</a> | Email: <a href="mailto:contact@dudez.in" style="color: #2563eb;">contact@dudez.in</a></p>
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: #0f172a;">Ameyy Digital Services</p>
+              <p style="margin: 0 0 4px 0;">Software Development &amp; IT Services</p>
+              <p style="margin: 0 0 4px 0;">Chennai &amp; Nagapattinam, Tamil Nadu, India</p>
+              <p style="margin: 0 0 4px 0;">Email: <a href="mailto:ameyy.support@gmail.com" style="color: #2563eb;">ameyy.support@gmail.com</a> | UDYAM Reg: UDYAM-TN-13-0043166</p>
             </div>
           </div>
         `,
@@ -152,7 +152,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to dispatch email. Please email us directly at contact@dudez.in',
+        error: error.message || 'Failed to dispatch email. Please email us directly at ameyy.support@gmail.com',
       },
       { status: 500 }
     );
